@@ -1,4 +1,4 @@
-import { Env, InviteCode } from '../types';
+import { Env, InviteCode, EmbyUser } from '../types';
 import { createUser, getUsers, validateAdmin } from '../services/emby';
 import { renderAdminLoginPage } from '../views/admin-login.html';
 import { renderAdminDashboard } from '../views/admin-dashboard.html';
@@ -115,7 +115,7 @@ export async function handleAdminDashboard(request: Request, env: Env): Promise<
 
   try {
     // 获取用户列表
-    let embyUsers = [];
+    let embyUsers: EmbyUser[] = [];
     try {
       embyUsers = await getUsers(env.EMBY_SERVER_URL, env.EMBY_API_KEY);
     } catch (e) {
