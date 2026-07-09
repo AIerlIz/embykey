@@ -4,10 +4,14 @@ export interface EmbyUser {
   Id: string;
   Name: string;
   ServerId: string;
+  UserType?: string; // "User", "Administrator", "Guest"
   IsAdministrator: boolean;
   HasPassword: boolean;
   Policy?: {
     IsAdministrator: boolean;
+    IsHidden?: boolean;
+    IsDisabled?: boolean;
+    EnableUserPreferenceAccess?: boolean;
   };
 }
 
