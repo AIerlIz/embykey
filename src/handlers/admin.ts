@@ -1,7 +1,7 @@
 import { Env, InviteCode, EmbyUser } from '../types';
 import { createUser, getUsers, validateAdmin } from '../services/emby';
-import { renderAdminLoginPage } from '../views/admin-login.html';
-import { renderAdminDashboard } from '../views/admin-dashboard.html';
+import { renderAdminLoginPage } from '../views/admin-login';
+import { renderAdminDashboard } from '../views/admin-dashboard';
 
 // === Session 管理 ===
 

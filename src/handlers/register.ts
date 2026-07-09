@@ -1,7 +1,7 @@
 import { Env } from '../types';
 import { getLibraryStats, createUser } from '../services/emby';
-import { renderRegisterPage } from '../views/register.html';
-import { renderSuccessPage } from '../views/success.html';
+import { renderRegisterPage } from '../views/register';
+import { renderSuccessPage } from '../views/success';
 
 // GET / - 注册页面（含媒体库统计）
 export async function handleRegisterGet(env: Env): Promise<Response> {
