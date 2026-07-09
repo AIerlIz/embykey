@@ -199,6 +199,25 @@ export function renderRegisterPage(
 </div>
 
 <script>
+  // 从 URL 查询参数读取邀请码并自动填入
+  function initInviteCode() {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      const inviteCodeInput = document.getElementById('inviteCode');
+      inviteCodeInput.value = decodeURIComponent(code);
+      // 移除 URL 中的查询参数，避免表单提交时重复
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }
+
+  // 页面加载时自动填入邀请码
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initInviteCode);
+  } else {
+    initInviteCode();
+  }
+
   document.getElementById('registerForm').addEventListener('submit', function(e) {
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
