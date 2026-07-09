@@ -110,9 +110,14 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       }
       await env.INVITE_CODES.put(inviteKey, JSON.stringify(invite));
 
-      // 重定向到成功页，带上用户名
-      const redirectUrl = `/success?username=${encodeURIComponent(username)}`;
-      return Response.redirect(redirectUrl, 302);
+      // 重定向到成功页，使用完整 URL
+      const successUrl = new URL(request.url);
+      successUrl.pathname = '/success';
+      successUrl.search = `?username=${encodeURIComponent(username)}`;
+      return new Response(null, {
+        status: 302,
+        headers: { Location: successUrl.toString() },
+      });
 
     } catch (err: any) {
       console.error(`[Register] 创建用户失败: ${username}`);
