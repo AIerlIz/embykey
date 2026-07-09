@@ -74,7 +74,11 @@ export async function handleAdminLoginPost(request: Request, env: Env): Promise<
   // 通过 Emby API 验证管理员
   const admin = await validateAdmin(env.EMBY_SERVER_URL, env.EMBY_API_KEY, username, password);
   if (!admin) {
-    const html = renderAdminLoginPage(env, '用户名或密码错误，或不是管理员账号');
+    let errorMsg = '用户名或密码错误，或不是管理员账号';
+    if (!env.EMBY_SERVER_URL) {
+      errorMsg = 'EMBY_SERVER_URL 未设置，请在 Cloudflare Dashboard 添加 Secret 变量';
+    }
+    const html = renderAdminLoginPage(env, errorMsg);
     return new Response(html, {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },

@@ -43,19 +43,36 @@ export async function authenticateUserByName(
   username: string,
   password: string
 ): Promise<{ AccessToken: string; User: EmbyUser } | null> {
+  if (!serverUrl) {
+    console.error('[Auth] EMBY_SERVER_URL 未设置，请在 Cloudflare Dashboard 或通过 wrangler secret put 设置');
+    return null;
+  }
   const url = `${serverUrl.replace(/\/+$/, '')}/emby/Users/AuthenticateByName`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      Username: username,
-      Pw: password,
-    }),
-  });
+  console.log(`[Auth] 正在连接 Emby 服务器验证用户: ${url}`);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        Username: username,
+        Pw: password,
+      }),
+    });
 
-  if (!response.ok) return null;
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`[Auth] Emby 返回错误状态码 ${response.status}: ${text}`);
+      return null;
+    }
 
-  return response.json();
+    const data = await response.json();
+    console.log(`[Auth] 验证成功，用户 ${data.User?.Name} 是管理员: ${data.User?.IsAdministrator}`);
+    return data;
+  } catch (err: any) {
+    console.error(`[Auth] 无法连接到 Emby 服务器: ${err.message}`);
+    console.error(`[Auth] 请检查: 1) EMBY_SERVER_URL 是否正确; 2) 服务器是否可从公网访问`);
+    return null;
+  }
 }
 
 /**
