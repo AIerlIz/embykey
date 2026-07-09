@@ -1,0 +1,16 @@
+{
+  "name": "emby-register",
+  "version": "1.0.0",
+  "description": "Emby 自助注册系统 - Cloudflare Worker",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240320.0",
+    "typescript": "^5.4.0",
+    "wrangler": "^3.50.0"
+  }
+}

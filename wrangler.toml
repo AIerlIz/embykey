@@ -1,0 +1,27 @@
+name = "emby-register"
+main = "src/index.ts"
+compatibility_date = "2024-03-20"
+
+# ==========================================
+# 环境变量配置说明
+# ==========================================
+# 部署前请先设置以下变量：
+#   npx wrangler secret put EMBY_SERVER_URL
+#   npx wrangler secret put EMBY_SERVER_NAME
+#   npx wrangler secret put EMBY_API_KEY
+#   npx wrangler secret put TURNSTILE_SITE_KEY
+#   npx wrangler secret put TURNSTILE_SECRET_KEY
+#   npx wrangler secret put ADMIN_SESSION_SECRET
+#
+# 也可以通过 wrangler.toml [vars] 设置非敏感变量
+
+[vars]
+EMBY_SERVER_NAME = "Emby Server"
+
+# --- KV 命名空间（用于存储邀请码和 session） ---
+# 1. 创建 KV namespace:
+#    npx wrangler kv:namespace create "INVITE_CODES"
+# 2. 将输出的 id 填入下方
+# [[kv_namespaces]]
+# binding = "INVITE_CODES"
+# id = ""
