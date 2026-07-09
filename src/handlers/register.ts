@@ -98,7 +98,9 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
         templateUserId = await env.INVITE_CODES.get('config:template_user_id') || undefined;
       } catch {}
 
+      console.log(`[Register] 开始创建用户: ${username}`);
       const user = await createUser(env.EMBY_SERVER_URL, env.EMBY_API_KEY, username, password, templateUserId);
+      console.log(`[Register] 用户创建成功: ${username} (ID: ${user.Id})`);
 
       // 标记邀请码已使用
       invite.useCount = (invite.useCount || 0) + 1;
@@ -113,12 +115,18 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       return Response.redirect(redirectUrl, 302);
 
     } catch (err: any) {
-      console.error('Failed to create user:', err);
-      return renderRegisterError(env, '创建用户失败，请稍后重试或联系管理员');
+      console.error(`[Register] 创建用户失败: ${username}`);
+      console.error(`[Register] 错误信息:`, err);
+      console.error(`[Register] 错误堆栈:`, err.stack);
+      
+      // 返回更详细的错误信息（开发调试）
+      const errorMsg = err.message || '创建用户失败，请稍后重试或联系管理员';
+      return renderRegisterError(env, errorMsg);
     }
 
   } catch (err: any) {
     console.error('Register error:', err);
+    console.error('Register error stack:', err.stack);
     return renderRegisterError(env, '请求处理异常，请重试');
   }
 }
