@@ -103,6 +103,27 @@ export async function validateAdmin(
 }
 
 /**
+ * 标准化用户对象：确保 IsAdministrator 等字段正确映射到顶层
+ */
+function normalizeUser(user: any): EmbyUser {
+  return {
+    Id: user.Id,
+    Name: user.Name,
+    ServerId: user.ServerId,
+    UserType: user.UserType,
+    // IsAdministrator 优先取顶层，其次取 Policy
+    IsAdministrator: user.IsAdministrator !== undefined ? user.IsAdministrator : user.Policy?.IsAdministrator === true,
+    HasPassword: user.HasPassword,
+    Policy: {
+      IsAdministrator: user.Policy?.IsAdministrator ?? (user.IsAdministrator === true),
+      IsHidden: user.Policy?.IsHidden,
+      IsDisabled: user.Policy?.IsDisabled,
+      EnableUserPreferenceAccess: user.Policy?.EnableUserPreferenceAccess,
+    },
+  };
+}
+
+/**
  * 创建 Emby 用户，并可选择从模板用户复制策略和配置
  */
 export async function createUser(
@@ -113,7 +134,7 @@ export async function createUser(
   templateUserId?: string
 ): Promise<EmbyUser> {
   // 1. 创建用户
-  const newUser = await embyApiCall<EmbyUser>(serverUrl, apiKey, `/Users/New`, {
+  const newUser = await embyApiCall<any>(serverUrl, apiKey, `/Users/New`, {
     method: 'POST',
     body: JSON.stringify({
       Name: username,
@@ -151,7 +172,7 @@ export async function createUser(
     }
   }
 
-  return newUser;
+  return normalizeUser(newUser);
 }
 
 /**
@@ -210,7 +231,9 @@ export async function updateUserConfiguration(
  * 获取用户列表
  */
 export async function getUsers(serverUrl: string, apiKey: string): Promise<EmbyUser[]> {
-  return embyApiCall<EmbyUser[]>(serverUrl, apiKey, '/Users');
+  const users = await embyApiCall<any[]>(serverUrl, apiKey, '/Users');
+  // 标准化所有用户对象，确保 IsAdministrator 等字段正确映射
+  return users.map(u => normalizeUser(u));
 }
 
 /**
