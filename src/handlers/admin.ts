@@ -108,13 +108,16 @@ export async function handleAdminLoginPost(request: Request, env: Env): Promise<
   // 创建 session（自动存储到 KV）
   const token = createSession(env, admin.Name);
 
-  // 重定向到仪表盘
-  const response = redirectTo(request, '/admin/dashboard');
-  response.headers.set(
-    'Set-Cookie',
-    `admin_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`
-  );
-  return response;
+  // 重定向到仪表盘，并设置 cookie
+  const url = new URL(request.url);
+  const absoluteUrl = url.protocol + '//' + url.host + '/admin/dashboard';
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: absoluteUrl,
+      'Set-Cookie': `admin_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`,
+    },
+  });
 }
 
 // === 管理后台仪表盘 ===
