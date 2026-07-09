@@ -50,6 +50,7 @@ export function renderAdminDashboard(
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>管理后台 - ${serverName}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -184,9 +185,18 @@ export function renderAdminDashboard(
     color: #ef9a9a;
     border: 1px solid rgba(244,67,54,0.3);
   }
+  .btn-secondary {
+    background: rgba(124,95,207,0.2);
+    color: #b39ddb;
+    border: 1px solid rgba(124,95,207,0.3);
+  }
   .btn-sm {
     padding: 4px 12px;
     font-size: 12px;
+  }
+  .btn-group {
+    display: flex;
+    gap: 8px;
   }
   .form-inline {
     display: flex;
@@ -253,12 +263,104 @@ export function renderAdminDashboard(
     display: none;
     z-index: 999;
   }
+  
+  /* 模态框样式 */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+  }
+  .modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-content {
+    background: #1a1a2e;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .modal-header h2 {
+    color: #fff;
+    font-size: 18px;
+    margin: 0;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-close:hover {
+    color: #fff;
+  }
+  .share-container {
+    text-align: center;
+  }
+  .qr-code-box {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    display: inline-block;
+  }
+  .qr-code-box canvas {
+    display: block;
+    margin: 0 auto;
+  }
+  .share-link {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 16px 0;
+    word-break: break-all;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #b39ddb;
+  }
+  .copy-btn {
+    margin-top: 12px;
+  }
+  
   @media (max-width: 768px) {
     .container { padding: 16px; }
     .card { padding: 16px; }
     table { font-size: 12px; }
     th, td { padding: 8px; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .btn-group {
+      flex-direction: column;
+    }
+    .btn-group .btn {
+      width: 100%;
+      justify-content: center;
+    }
   }
 </style>
 </head>
@@ -339,7 +441,10 @@ export function renderAdminDashboard(
                 <td>${c.useCount}${c.maxUses === -1 ? ' / ∞' : ' / ' + c.maxUses}</td>
                 <td class="${statusClass}">${statusText}</td>
                 <td>
-                  <button class="btn btn-danger btn-sm" data-code="${c.code}" onclick="deleteCode(this.dataset.code)">删除</button>
+                  <div class="btn-group">
+                    <button class="btn btn-secondary btn-sm" onclick="shareCode('${escapeHtml(c.code)}')">分享</button>
+                    <button class="btn btn-danger btn-sm" data-code="${c.code}" onclick="deleteCode(this.dataset.code)">删除</button>
+                  </div>
                 </td>
               </tr>`;
             }).join('')}
@@ -406,9 +511,68 @@ export function renderAdminDashboard(
   </div>
 </div>
 
+<!-- 分享模态框 -->
+<div id="shareModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>📤 分享邀请码</h2>
+      <button class="modal-close" onclick="closeShareModal()">✕</button>
+    </div>
+    <div class="share-container">
+      <p style="color:#aaa;margin-bottom:16px;">邀请码: <strong style="color:#fff;font-family:monospace;" id="shareCode"></strong></p>
+      
+      <div class="qr-code-box">
+        <div id="qrcode"></div>
+      </div>
+      
+      <p style="color:#888;font-size:12px;margin-top:16px;">注册链接</p>
+      <div class="share-link" id="shareLink"></div>
+      
+      <button class="btn btn-primary copy-btn" onclick="copyShareLink()">📋 复制链接</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
+let currentShareCode = '';
+
+async function shareCode(code) {
+  currentShareCode = code;
+  const baseUrl = window.location.origin;
+  const shareLink = baseUrl + '/?code=' + encodeURIComponent(code);
+  
+  document.getElementById('shareCode').textContent = code;
+  document.getElementById('shareLink').textContent = shareLink;
+  
+  // 生成二维码
+  document.getElementById('qrcode').innerHTML = '';
+  new QRCode(document.getElementById('qrcode'), {
+    text: shareLink,
+    width: 200,
+    height: 200,
+    colorDark: '#fff',
+    colorLight: '#1a1a2e',
+  });
+  
+  document.getElementById('shareModal').classList.add('active');
+}
+
+function closeShareModal() {
+  document.getElementById('shareModal').classList.remove('active');
+}
+
+function copyShareLink() {
+  const baseUrl = window.location.origin;
+  const shareLink = baseUrl + '/?code=' + encodeURIComponent(currentShareCode);
+  navigator.clipboard.writeText(shareLink).then(() => {
+    showToast('✅ 链接已复制到剪贴板');
+  }).catch(() => {
+    showToast('❌ 复制失败，请手动复制');
+  });
+}
+
 async function deleteCode(code) {
   if (!confirm('确定要删除邀请码 ' + code + ' 吗？')) return;
   try {
@@ -424,12 +588,20 @@ async function deleteCode(code) {
     showToast('❌ 删除失败');
   }
 }
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.style.display = 'block';
   setTimeout(() => t.style.display = 'none', 2000);
 }
+
+// 点击模态框背景关闭
+document.getElementById('shareModal')?.addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeShareModal();
+  }
+});
 </script>
 </body>
 </html>`;
