@@ -5,23 +5,29 @@ compatibility_date = "2024-03-20"
 # ==========================================
 # 环境变量配置说明
 # ==========================================
-# 部署前请先设置以下变量：
-#   npx wrangler secret put EMBY_SERVER_URL
-#   npx wrangler secret put EMBY_SERVER_NAME
-#   npx wrangler secret put EMBY_API_KEY
-#   npx wrangler secret put TURNSTILE_SITE_KEY
-#   npx wrangler secret put TURNSTILE_SECRET_KEY
-#   npx wrangler secret put ADMIN_SESSION_SECRET
-#
-# 也可以通过 wrangler.toml [vars] 设置非敏感变量
+# Secret 变量（通过 Cloudflare Dashboard 或 wrangler secret 设置）：
+#   EMBY_SERVER_URL       - Emby 服务器地址
+#   EMBY_SERVER_NAME      - Emby 服务器名称（展示用）
+#   EMBY_API_KEY          - Emby API 密钥
+#   TURNSTILE_SITE_KEY    - Turnstile 站点密钥
+#   TURNSTILE_SECRET_KEY  - Turnstile 密钥
+#   ADMIN_SESSION_SECRET  - 管理会话密钥
 
 [vars]
 EMBY_SERVER_NAME = "Emby Server"
 
-# --- KV 命名空间（用于存储邀请码和 session） ---
-# 1. 创建 KV namespace:
-#    npx wrangler kv:namespace create "INVITE_CODES"
-# 2. 将输出的 id 填入下方
-# [[kv_namespaces]]
-# binding = "INVITE_CODES"
-# id = ""
+# --- KV 命名空间（通过 Cloudflare Dashboard 绑定，不写在代码中） ---
+#
+# 创建并绑定 INVITE_CODES 的步骤：
+# 1. 创建 namespace:
+#      npx wrangler kv:namespace create "INVITE_CODES"
+#    或直接在 Dashboard → Workers → KV 中创建
+#
+# 2. 绑定到 Worker:
+#     Cloudflare Dashboard → Workers & Pages → 点击 embykey
+#     → Settings → Variables → KV Namespace Bindings
+#     → 添加绑定，Variable name 填 "INVITE_CODES"
+#     → 选择刚创建的 KV namespace
+#
+#    绑定一次后，后续所有部署都会自动保留此绑定，无需重复操作。
+#    （不要在 wrangler.toml 中写死 namespace id）
