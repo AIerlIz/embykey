@@ -114,6 +114,44 @@ export async function handleAdminLoginPost(request: Request, env: Env): Promise<
   return response;
 }
 
+// === 管理后台仪表盘 ===
+
+// GET /admin/dashboard
+export async function handleAdminDashboard(request: Request, env: Env): Promise<Response> {
+  const username = await validateSession(request, env);
+  if (!username) {
+    return redirectTo(request, '/admin');
+  }
+
+  try {
+    // 获取用户列表
+    let embyUsers: EmbyUser[] = [];
+    try {
+      embyUsers = await getUsers(env.EMBY_SERVER_URL, env.EMBY_API_KEY);
+    } catch (e) {
+      console.error('Failed to fetch users:', e);
+    }
+
+    // 获取邀请码列表
+    const inviteCodes = await listInviteCodes(env);
+
+    // 获取模板用户 ID
+    let templateUserId = '';
+    try {
+      templateUserId = await env.INVITE_CODES.get('config:template_user_id') || '';
+    } catch {}
+
+    const html = renderAdminDashboard(env, username, embyUsers, inviteCodes, templateUserId);
+    return new Response(html, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
+  } catch (err: any) {
+    console.error('Dashboard error:', err);
+    return new Response('服务器内部错误', { status: 500 });
+  }
+}
+
 // === 邀请码管理 ===
 
 // POST /admin/invite-codes - 生成邀请码
