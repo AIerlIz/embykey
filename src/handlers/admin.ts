@@ -22,9 +22,10 @@ function generateSessionToken(): string {
   return Array.from(buf, b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function createSession(env: Env, username: string): string {
+async function createSession(env: Env, username: string): Promise<string> {
   if (!env.INVITE_CODES) {
     console.error('[Session] INVITE_CODES KV 未绑定');
+    return '';
   }
   const token = generateSessionToken();
   const sessionData = {
@@ -32,10 +33,12 @@ function createSession(env: Env, username: string): string {
     token,
     expiresAt: Date.now() + 24 * 60 * 60 * 1000,
   };
-  if (env.INVITE_CODES) {
-    env.INVITE_CODES.put(`session:${token}`, JSON.stringify(sessionData), {
+  try {
+    await env.INVITE_CODES.put(`session:${token}`, JSON.stringify(sessionData), {
       expirationTtl: 86400,
-    }).catch(e => console.error('Failed to store session:', e));
+    });
+  } catch (e) {
+    console.error('Failed to store session:', e);
   }
   return token;
 }
@@ -105,8 +108,8 @@ export async function handleAdminLoginPost(request: Request, env: Env): Promise<
     });
   }
 
-  // 创建 session（自动存储到 KV）
-  const token = createSession(env, admin.Name);
+  // 创建 session（等待存储到 KV）
+  const token = await createSession(env, admin.Name);
 
   // 重定向到仪表盘，并设置 cookie
   const url = new URL(request.url);
