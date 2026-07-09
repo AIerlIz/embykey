@@ -40,19 +40,24 @@ async function embyApiCall<T>(
  */
 export async function authenticateUserByName(
   serverUrl: string,
+  apiKey: string,
   username: string,
   password: string
 ): Promise<{ AccessToken: string; User: EmbyUser } | null> {
   if (!serverUrl) {
-    console.error('[Auth] EMBY_SERVER_URL 未设置，请在 Cloudflare Dashboard 或通过 wrangler secret put 设置');
+    console.error('[Auth] EMBY_SERVER_URL 未设置');
     return null;
   }
   const url = `${serverUrl.replace(/\/+$/, '')}/emby/Users/AuthenticateByName`;
-  console.log(`[Auth] 正在连接 Emby 服务器验证用户: ${url}`);
+  console.log(`[Auth] 正在连接 Emby 服务器: ${url}`);
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Emby-Token': apiKey,
+        'X-Emby-Authorization': 'MediaBrowser Client="EmbyRegister", Device="Worker", DeviceId="worker", Version="1.0.0"',
+      },
       body: JSON.stringify({
         Username: username,
         Pw: password,
@@ -61,16 +66,21 @@ export async function authenticateUserByName(
 
     if (!response.ok) {
       const text = await response.text();
-      console.error(`[Auth] Emby 返回错误状态码 ${response.status}: ${text}`);
+      console.error(`[Auth] Emby 返回错误 (${response.status}): ${text.substring(0, 200)}`);
       return null;
     }
 
-    const data: { AccessToken: string; User: EmbyUser } = await response.json();
-    console.log(`[Auth] 验证成功，用户 ${data.User?.Name} 是管理员: ${data.User?.IsAdministrator}`);
-    return data;
+    const data: any = await response.json();
+    const user = data.User || data.user;
+    if (!user) {
+      console.error('[Auth] 响应中未找到用户信息:', JSON.stringify(data).substring(0, 200));
+      return null;
+    }
+    console.log(`[Auth] 验证成功，用户 "${user.Name || username}" 是管理员: ${!!user.IsAdministrator}`);
+    return { AccessToken: data.AccessToken || '', User: user };
   } catch (err: any) {
-    console.error(`[Auth] 无法连接到 Emby 服务器: ${err.message}`);
-    console.error(`[Auth] 请检查: 1) EMBY_SERVER_URL 是否正确; 2) 服务器是否可从公网访问`);
+    console.error(`[Auth] 连接失败: ${err.message}`);
+    console.error(`[Auth] 请确认: 1) EMBY_SERVER_URL 是否正确; 2) 服务器可从公网访问`);
     return null;
   }
 }
@@ -84,7 +94,7 @@ export async function validateAdmin(
   username: string,
   password: string
 ): Promise<EmbyUser | null> {
-  const auth = await authenticateUserByName(serverUrl, username, password);
+  const auth = await authenticateUserByName(serverUrl, apiKey, username, password);
   if (!auth || !auth.User) return null;
   if (!auth.User.IsAdministrator) return null;
   return auth.User;
