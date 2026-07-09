@@ -9,7 +9,10 @@ import { renderAdminDashboard } from '../views/admin-dashboard';
 function redirectTo(request: Request, path: string, status: number = 302): Response {
   const url = new URL(request.url);
   const absoluteUrl = url.protocol + '//' + url.host + path;
-  return Response.redirect(absoluteUrl, status);
+  return new Response(null, {
+    status,
+    headers: { Location: absoluteUrl },
+  });
 }
 
 // === Session 管理 ===
