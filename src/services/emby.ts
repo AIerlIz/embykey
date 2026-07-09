@@ -65,7 +65,7 @@ export async function authenticateUserByName(
       return null;
     }
 
-    const data = await response.json();
+    const data: { AccessToken: string; User: EmbyUser } = await response.json();
     console.log(`[Auth] 验证成功，用户 ${data.User?.Name} 是管理员: ${data.User?.IsAdministrator}`);
     return data;
   } catch (err: any) {
