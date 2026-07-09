@@ -56,7 +56,7 @@ export async function authenticateUserByName(
       headers: {
         'Content-Type': 'application/json',
         'X-Emby-Token': apiKey,
-        'X-Emby-Authorization': 'MediaBrowser Client="EmbyRegister", Device="Worker", DeviceId="worker", Version="1.0.0"',
+        'X-Emby-Authorization': 'Emby Client="EmbyRegister", Device="Worker", DeviceId="worker", Version="1.0.0"',
       },
       body: JSON.stringify({
         Username: username,
@@ -96,7 +96,9 @@ export async function validateAdmin(
 ): Promise<EmbyUser | null> {
   const auth = await authenticateUserByName(serverUrl, apiKey, username, password);
   if (!auth || !auth.User) return null;
-  if (!auth.User.IsAdministrator) return null;
+  // 兼容两种 IsAdministrator 字段位置：直接属性 或 Policy 内
+  const isAdmin = auth.User.IsAdministrator || auth.User.Policy?.IsAdministrator === true;
+  if (!isAdmin) return null;
   return auth.User;
 }
 

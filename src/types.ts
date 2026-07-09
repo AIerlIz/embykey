@@ -6,6 +6,9 @@ export interface EmbyUser {
   ServerId: string;
   IsAdministrator: boolean;
   HasPassword: boolean;
+  Policy?: {
+    IsAdministrator: boolean;
+  };
 }
 
 export interface EmbyLibraryStats {
