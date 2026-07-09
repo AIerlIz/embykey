@@ -296,7 +296,7 @@ export function renderAdminDashboard(
                 <td>${c.useCount}${c.maxUses === -1 ? ' / ∞' : ' / ' + c.maxUses}</td>
                 <td class="${statusClass}">${statusText}</td>
                 <td>
-                  <button class="btn btn-danger btn-sm" onclick="deleteCode('${escapeHtml(c.code)}')">删除</button>
+                  <button class="btn btn-danger btn-sm" data-code="${c.code}" onclick="deleteCode(this.dataset.code)">删除</button>
                 </td>
               </tr>`;
             }).join('')}

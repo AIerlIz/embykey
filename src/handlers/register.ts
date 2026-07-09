@@ -33,16 +33,27 @@ export async function handleRegisterGet(env: Env): Promise<Response> {
 // POST /register - 提交注册
 export async function handleRegisterPost(request: Request, env: Env): Promise<Response> {
   try {
+    // CSRF 防护：验证请求来源
+    const origin = request.headers.get('Origin') || request.headers.get('Referer') || '';
+    const url = new URL(request.url);
+    const allowedOrigin = url.protocol + '//' + url.host;
+    if (origin && !origin.startsWith(allowedOrigin)) {
+      return renderRegisterError(env, '非法请求来源');
+    }
+
     const formData = await request.formData();
     const username = (formData.get('username') as string || '').trim();
     const email = (formData.get('email') as string || '').trim();
-    const password = formData.get('password') as string || '';
+    const password = (formData.get('password') as string || '');
     const inviteCode = (formData.get('inviteCode') as string || '').trim();
-    const turnstileToken = formData.get('cf-turnstile-response') as string || '';
+    const turnstileToken = (formData.get('cf-turnstile-response') as string || '');
 
     // 基本校验
-    if (!username || username.length < 2) {
-      return renderRegisterError(env, '用户名至少 2 个字符');
+    if (!username || username.length < 2 || username.length > 32) {
+      return renderRegisterError(env, '用户名长度需为 2-32 个字符');
+    }
+    if (!/^[a-zA-Z0-9_一-龥]+$/.test(username)) {
+      return renderRegisterError(env, '用户名仅支持字母、数字、下划线和中文');
     }
     if (!password || password.length < 6) {
       return renderRegisterError(env, '密码至少 6 个字符');
@@ -103,7 +114,7 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
 
     } catch (err: any) {
       console.error('Failed to create user:', err);
-      return renderRegisterError(env, `创建用户失败：${err.message}`);
+      return renderRegisterError(env, '创建用户失败，请稍后重试或联系管理员');
     }
 
   } catch (err: any) {
@@ -112,23 +123,7 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
   }
 }
 
-// GET /success - 注册成功页
-export async function handleSuccess(env: Env): Promise<Response> {
-  // 从 URL 参数获取用户名
-  const url = new URL(env as any, ''); // fallback
-  // 实际从 request 获取 — 用 index.ts 传参
-  // 默认显示
-  const html = renderSuccessPage(env, '新用户');
-  return new Response(html, {
-    status: 200,
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
-  });
-}
 
-/**
- * 带用户名的成功页 — 由 handleRegisterPost 重定向后调用
- * 我们需要从 request 获取 URL 参数
- */
 export async function handleSuccessWithRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const username = url.searchParams.get('username') || '新用户';

@@ -6,12 +6,9 @@ import { renderAdminDashboard } from '../views/admin-dashboard.html';
 // === Session 管理 ===
 
 function generateSessionToken(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let token = '';
-  for (let i = 0; i < 48; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return token;
+  const buf = new Uint8Array(32);
+  crypto.getRandomValues(buf);
+  return Array.from(buf, b => b.toString(16).padStart(2, '0')).join('');
 }
 
 function createSession(env: Env, username: string): string {
@@ -19,11 +16,12 @@ function createSession(env: Env, username: string): string {
   const sessionData = {
     username,
     token,
-    expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 小时
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000,
   };
-  // 使用环境变量密钥签名
-  const sessionStr = JSON.stringify(sessionData);
-  // 简单编码存储到 cookie
+  // 存储 session 到 KV，有效期 24 小时
+  env.INVITE_CODES.put(`session:${token}`, JSON.stringify(sessionData), {
+    expirationTtl: 86400,
+  }).catch(e => console.error('Failed to store session:', e));
   return token;
 }
 
@@ -138,7 +136,7 @@ export async function handleAdminDashboard(request: Request, env: Env): Promise<
     });
   } catch (err: any) {
     console.error('Dashboard error:', err);
-    return new Response(`Error: ${err.message}`, { status: 500 });
+    return new Response('服务器内部错误', { status: 500 });
   }
 }
 
@@ -197,7 +195,7 @@ export async function handleInviteCodesDelete(request: Request, env: Env, code: 
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: '删除失败' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
