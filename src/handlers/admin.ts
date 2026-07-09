@@ -3,8 +3,16 @@ import { createUser, getUsers, validateAdmin } from '../services/emby';
 import { renderAdminLoginPage } from '../views/admin-login';
 import { renderAdminDashboard } from '../views/admin-dashboard';
 
-// === Session 管理 ===
 
+// === 辅助函数 ===
+
+function redirectTo(request: Request, path: string, status: number = 302): Response {
+  const url = new URL(request.url);
+  const absoluteUrl = url.protocol + '//' + url.host + path;
+  return Response.redirect(absoluteUrl, status);
+}
+
+// === Session 管理 ===
 function generateSessionToken(): string {
   const buf = new Uint8Array(32);
   crypto.getRandomValues(buf);
@@ -12,20 +20,29 @@ function generateSessionToken(): string {
 }
 
 function createSession(env: Env, username: string): string {
+  if (!env.INVITE_CODES) {
+    console.error('[Session] INVITE_CODES KV 未绑定');
+  }
   const token = generateSessionToken();
   const sessionData = {
     username,
     token,
     expiresAt: Date.now() + 24 * 60 * 60 * 1000,
   };
-  // 存储 session 到 KV，有效期 24 小时
-  env.INVITE_CODES.put(`session:${token}`, JSON.stringify(sessionData), {
-    expirationTtl: 86400,
-  }).catch(e => console.error('Failed to store session:', e));
+  if (env.INVITE_CODES) {
+    env.INVITE_CODES.put(`session:${token}`, JSON.stringify(sessionData), {
+      expirationTtl: 86400,
+    }).catch(e => console.error('Failed to store session:', e));
+  }
   return token;
 }
 
 async function validateSession(request: Request, env: Env): Promise<string | null> {
+  if (!env.INVITE_CODES) {
+    console.error('[Session] INVITE_CODES KV 未绑定，无法验证 session');
+    return null;
+  }
+
   const cookie = request.headers.get('Cookie') || '';
   const match = cookie.match(/admin_token=([^;]+)/);
   if (!match) return null;
@@ -85,63 +102,16 @@ export async function handleAdminLoginPost(request: Request, env: Env): Promise<
     });
   }
 
-  // 创建 session
+  // 创建 session（自动存储到 KV）
   const token = createSession(env, admin.Name);
-  // 存储 session 到 KV
-  const sessionData = {
-    username: admin.Name,
-    token,
-    expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-  };
-  await env.INVITE_CODES.put(`session:${token}`, JSON.stringify(sessionData), {
-    expirationTtl: 86400, // 24 小时
-  });
 
   // 重定向到仪表盘
-  const response = Response.redirect('/admin/dashboard', 302);
+  const response = redirectTo(request, '/admin/dashboard');
   response.headers.set(
     'Set-Cookie',
     `admin_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`
   );
   return response;
-}
-
-// === 管理后台仪表盘 ===
-
-// GET /admin/dashboard
-export async function handleAdminDashboard(request: Request, env: Env): Promise<Response> {
-  const username = await validateSession(request, env);
-  if (!username) {
-    return Response.redirect('/admin', 302);
-  }
-
-  try {
-    // 获取用户列表
-    let embyUsers: EmbyUser[] = [];
-    try {
-      embyUsers = await getUsers(env.EMBY_SERVER_URL, env.EMBY_API_KEY);
-    } catch (e) {
-      console.error('Failed to fetch users:', e);
-    }
-
-    // 获取邀请码列表
-    const inviteCodes = await listInviteCodes(env);
-
-    // 获取模板用户 ID
-    let templateUserId = '';
-    try {
-      templateUserId = await env.INVITE_CODES.get('config:template_user_id') || '';
-    } catch {}
-
-    const html = renderAdminDashboard(env, username, embyUsers, inviteCodes, templateUserId);
-    return new Response(html, {
-      status: 200,
-      headers: { 'Content-Type': 'text/html; charset=utf-8' },
-    });
-  } catch (err: any) {
-    console.error('Dashboard error:', err);
-    return new Response('服务器内部错误', { status: 500 });
-  }
 }
 
 // === 邀请码管理 ===
@@ -175,10 +145,10 @@ export async function handleInviteCodesPost(request: Request, env: Env): Promise
     });
 
     // 重定向回仪表盘
-    return Response.redirect('/admin/dashboard', 302);
+    return redirectTo(request, '/admin/dashboard');
   } catch (err: any) {
     console.error('Create invite code error:', err);
-    return Response.redirect('/admin/dashboard', 302);
+    return redirectTo(request, '/admin/dashboard');
   }
 }
 
@@ -212,7 +182,7 @@ export async function handleInviteCodesDelete(request: Request, env: Env, code: 
 export async function handleTemplateUserPost(request: Request, env: Env): Promise<Response> {
   const username = await validateSession(request, env);
   if (!username) {
-    return Response.redirect('/admin', 302);
+    return redirectTo(request, '/admin');
   }
 
   try {
@@ -226,10 +196,10 @@ export async function handleTemplateUserPost(request: Request, env: Env): Promis
       await env.INVITE_CODES.delete('config:template_user_id');
     }
 
-    return Response.redirect('/admin/dashboard', 302);
+    return redirectTo(request, '/admin/dashboard');
   } catch (err: any) {
     console.error('Set template user error:', err);
-    return Response.redirect('/admin/dashboard', 302);
+    return redirectTo(request, '/admin/dashboard');
   }
 }
 
