@@ -16,6 +16,34 @@ export function renderAdminDashboard(
   // 查找模板用户名称
   const templateUser = embyUsers.find(u => u.Id === templateUserId);
 
+  // 获取用户角色标签
+  function getRoleLabel(user: EmbyUser): string {
+    if (user.IsAdministrator) {
+      return '管理员';
+    }
+    if (user.Policy?.IsHidden) {
+      return '隐藏用户';
+    }
+    if (user.Policy?.IsDisabled) {
+      return '已禁用';
+    }
+    return '用户';
+  }
+
+  // 获取用户角色样式类
+  function getRoleClass(user: EmbyUser): string {
+    if (user.IsAdministrator) {
+      return 'role-admin';
+    }
+    if (user.Policy?.IsHidden) {
+      return 'role-hidden';
+    }
+    if (user.Policy?.IsDisabled) {
+      return 'role-disabled';
+    }
+    return 'role-user';
+  }
+
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -99,13 +127,28 @@ export function renderAdminDashboard(
     letter-spacing: 0.5px;
   }
   tr:hover td { background: rgba(255,255,255,0.02); }
-  .admin-badge {
+  .role-badge {
+    display: inline-block;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .role-admin {
     background: #5a4fcf;
     color: #fff;
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 11px;
-    font-weight: 500;
+  }
+  .role-user {
+    background: rgba(76,175,80,0.2);
+    color: #81c784;
+  }
+  .role-hidden {
+    background: rgba(255,152,0,0.2);
+    color: #ffb74d;
+  }
+  .role-disabled {
+    background: rgba(244,67,54,0.2);
+    color: #ef9a9a;
   }
   .status-active { color: #4caf50; }
   .status-used { color: #ff9800; }
@@ -345,6 +388,7 @@ export function renderAdminDashboard(
               <th>用户名</th>
               <th>用户 ID</th>
               <th>角色</th>
+              <th>状态</th>
               <th>密码</th>
             </tr>
           </thead>
@@ -352,7 +396,8 @@ export function renderAdminDashboard(
             ${embyUsers.map(u => `<tr>
               <td>${escapeHtml(u.Name)}</td>
               <td style="font-family:monospace;font-size:12px;color:#888;">${u.Id.substring(0, 12)}...</td>
-              <td>${u.IsAdministrator ? '<span class="admin-badge">管理员</span>' : '用户'}</td>
+              <td><span class="role-badge ${getRoleClass(u)}">${getRoleLabel(u)}</span></td>
+              <td>${u.Policy?.IsDisabled ? '❌ 已禁用' : u.Policy?.IsHidden ? '🔒 隐藏' : '✅ 正常'}</td>
               <td>${u.HasPassword ? '✅ 已设置' : '❌ 未设置'}</td>
             </tr>`).join('')}
           </tbody>
