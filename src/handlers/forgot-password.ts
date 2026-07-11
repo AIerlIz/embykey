@@ -31,7 +31,7 @@ export async function handleForgotPasswordPost(request: Request, env: Env): Prom
 
     const formData = await request.formData();
     const username = (formData.get('username') as string || '').trim();
-    const turnstileToken = (f*************t('cf-turnstile-response') as string || '');
+    const turnstileToken = (formData.get('cf-turnstile-response') as string || '');
 
     if (!username) {
       const html = renderForgotPasswordPage(env, serverName, '请输入用户名');
@@ -77,7 +77,7 @@ export async function handleForgotPasswordPost(request: Request, env: Env): Prom
   }
 }
 
-async function verifyTurnstile(secret: [redacted], token: [redacted] Promise<boolean> {
+async function verifyTurnstile(secret: string, token: string): Promise<boolean> {
   if (!token) return false;
   try {
     const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
