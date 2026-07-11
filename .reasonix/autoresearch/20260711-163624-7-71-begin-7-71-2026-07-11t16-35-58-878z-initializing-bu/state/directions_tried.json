@@ -1,0 +1,9 @@
+[
+  {
+    "fingerprint": "tsc-invitecounter-export-invitecounter-ccfeb32d",
+    "summary": "已修复。构建（`tsc`）通过了，部署失败的唯一原因是 `InviteCounter` 未从入口文件导出。已添加 `export { InviteCounter }`，下次",
+    "first_seen_iteration": 1,
+    "last_seen_iteration": 1,
+    "count": 1
+  }
+]

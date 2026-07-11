@@ -1,0 +1,9 @@
+[
+  {
+    "fingerprint": "new-classes-kv-do-new-sqlite-classes-41ce00e4",
+    "summary": "已修复。`new_classes` 是旧版 KV 存储的 DO，免费计划需要用 `new_sqlite_classes`。",
+    "first_seen_iteration": 1,
+    "last_seen_iteration": 1,
+    "count": 1
+  }
+]

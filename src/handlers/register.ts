@@ -97,13 +97,27 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       return renderRegisterError(env, '邀请码数据异常');
     }
 
-    // 通过 Durable Object 原子增量邀请码使用次数
-    const counterId = env.INVITE_COUNTER.idFromName(inviteCode);
-    const counterStub: any = env.INVITE_COUNTER.get(counterId);
-    const useResult: any = await counterStub.tryUse(inviteCode, invite.maxUses);
+    // 原子化使用邀请码（优先使用 Durable Object，不可用时回退到 KV）
+    let inviteUseSuccess = false;
+    let inviteUseMessage = '';
+    try {
+      if (env.INVITE_COUNTER) {
+        const counterId = env.INVITE_COUNTER.idFromName(inviteCode);
+        const counterStub: any = env.INVITE_COUNTER.get(counterId);
+        const useResult: any = await counterStub.tryUse(inviteCode, invite.maxUses);
+        inviteUseSuccess = useResult.success;
+        inviteUseMessage = useResult.message || '';
+      } else {
+        console.warn('[Register] INVITE_COUNTER DO 未绑定，使用 KV 方式（非原子操作）');
+        inviteUseSuccess = true; // KV 方式在后面处理
+      }
+    } catch (doErr: any) {
+      console.error('[Register] Durable Object 调用失败，回退到 KV:', doErr.message);
+      inviteUseSuccess = true; // 回退到 KV 方式
+    }
 
-    if (!useResult.success) {
-      return renderRegisterError(env, useResult.message || '邀请码已失效');
+    if (!inviteUseSuccess) {
+      return renderRegisterError(env, inviteUseMessage || '邀请码已失效');
     }
 
     // 调用 Emby API 创建用户（从模板复制配置）
@@ -118,11 +132,14 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       const user = await createUser(env.EMBY_SERVER_URL, env.EMBY_API_KEY, username, password, templateUserId);
       console.log(`[Register] 用户创建成功: ${username} (ID: ${user.Id})`);
 
-      // 更新邀请码元数据（usedAt/usedBy）—— 非关键操作，失败不影响主流程
+      // 更新邀请码使用次数和元数据（DO 不可用时作为回退计数）
       try {
         const updatedInvite = await env.INVITE_CODES.get(inviteKey);
         if (updatedInvite) {
           const parsed = JSON.parse(updatedInvite);
+          if (!env.INVITE_COUNTER) {
+            parsed.useCount = (parsed.useCount || 0) + 1;
+          }
           parsed.usedAt = new Date().toISOString();
           parsed.usedBy = username;
           await env.INVITE_CODES.put(inviteKey, JSON.stringify(parsed));
