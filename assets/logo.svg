@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0f0c29"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5a4fcf"/>
+      <stop offset="100%" stop-color="#7c5fcf"/>
+    </linearGradient>
+    <linearGradient id="accent2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c5fcf"/>
+      <stop offset="100%" stop-color="#b39ddb"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 圆角背景 -->
+  <rect x="20" y="20" width="360" height="360" rx="60" fill="url(#bg)" stroke="url(#accent)" stroke-width="3"/>
+
+  <!-- 钥匙齿部（右侧三条齿） -->
+  <rect x="235" y="130" width="16" height="14" rx="3" fill="url(#accent2)"/>
+  <rect x="235" y="160" width="16" height="14" rx="3" fill="url(#accent2)"/>
+  <rect x="235" y="190" width="16" height="14" rx="3" fill="url(#accent2)"/>
+
+  <!-- 钥匙柄（圆形 + 钥匙身） -->
+  <circle cx="155" cy="165" r="50" fill="none" stroke="url(#accent)" stroke-width="10"/>
+  <rect x="155" y="125" width="80" height="80" rx="8" fill="url(#accent)"/>
+
+  <!-- 钥匙柄内圈播放三角 -->
+  <polygon points="140,150 140,180 170,165" fill="#1a1a2e"/>
+  <rect x="155" y="125" width="80" height="80" rx="8" fill="none" stroke="url(#accent2)" stroke-width="4"/>
+
+  <!-- 钥匙柄外圈 -->
+  <circle cx="155" cy="165" r="50" fill="none" stroke="url(#accent)" stroke-width="10"/>
+
+  <!-- 文字：EmbyKey -->
+  <text x="200" y="310" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" fill="url(#accent2)" text-anchor="middle" letter-spacing="3">EmbyKey</text>
+
+  <!-- 底部小字 -->
+  <text x="200" y="345" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#666" text-anchor="middle" letter-spacing="2">自助注册系统</text>
+</svg>

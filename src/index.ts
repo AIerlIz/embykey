@@ -23,6 +23,13 @@ export default {
     try {
       // 路由分发
       switch (path) {
+        // ---- 静态资源 ----
+        case '/favicon.svg':
+          return new Response(faviconSvg, {
+            status: 200,
+            headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=86400' },
+          });
+
         // ---- 注册 ----
         case '/':
           if (method === 'GET') {
@@ -98,3 +105,18 @@ export default {
     }
   },
 };
+
+const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5a4fcf"/>
+      <stop offset="100%" stop-color="#7c5fcf"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="#1a1a2e" stroke="url(#g)" stroke-width="2.5"/>
+  <circle cx="24" cy="28" r="12" fill="none" stroke="url(#g)" stroke-width="4"/>
+  <rect x="28" y="22" width="18" height="12" rx="2" fill="url(#g)"/>
+  <rect x="41" y="28" width="5" height="3" rx="1" fill="#b39ddb"/>
+  <rect x="41" y="33" width="5" height="3" rx="1" fill="#b39ddb"/>
+  <polygon points="21,23 21,33 30,28" fill="#1a1a2e"/>
+</svg>`;
