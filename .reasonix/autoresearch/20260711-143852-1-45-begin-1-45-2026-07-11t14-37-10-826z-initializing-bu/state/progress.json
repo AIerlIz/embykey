@@ -1,0 +1,9 @@
+{
+  "status": "running",
+  "iteration": 1,
+  "current_direction": "本地没有 `.wrangler` 状态文件，无法自动获取命名空间 ID。需要在 `wrangler.toml` 中填入 `id`。",
+  "stale_count": 1,
+  "pivot_count": 0,
+  "blocked_reason": "",
+  "updated_at": "2026-07-11T14:39:06.3107123Z"
+}

@@ -43,7 +43,6 @@ export interface InviteCode {
 export interface RegisterRequest {
   username: string;
   password: string;
-  email?: string;
   inviteCode: string;
   turnstileToken: string;
 }

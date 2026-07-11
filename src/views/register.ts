@@ -171,11 +171,6 @@ export function renderRegisterPage(
       </div>
 
       <div class="form-group">
-        <label for="email">邮箱（选填）</label>
-        <input type="email" id="email" name="email" placeholder="用于找回密码">
-      </div>
-
-      <div class="form-group">
         <label for="password">密码 *</label>
         <input type="password" id="password" name="password" placeholder="设置密码" required minlength="6">
       </div>

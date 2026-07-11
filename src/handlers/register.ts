@@ -47,7 +47,6 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
 
     const formData = await request.formData();
     const username = (formData.get('username') as string || '').trim();
-    const email = (formData.get('email') as string || '').trim();
     const password = (formData.get('password') as string || '');
     const inviteCode = (formData.get('inviteCode') as string || '').trim();
     const turnstileToken = (formData.get('cf-turnstile-response') as string || '');

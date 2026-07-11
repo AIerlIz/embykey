@@ -1,0 +1,9 @@
+[
+  {
+    "fingerprint": "wrangler-id-wrangler-toml-id-f68c36c6",
+    "summary": "本地没有 `.wrangler` 状态文件，无法自动获取命名空间 ID。需要在 `wrangler.toml` 中填入 `id`。",
+    "first_seen_iteration": 1,
+    "last_seen_iteration": 1,
+    "count": 1
+  }
+]
