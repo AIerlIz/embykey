@@ -500,10 +500,10 @@ export function renderAdminDashboard(
           <tbody>
             ${embyUsers.map(u => `<tr>
               <td>${escapeHtml(u.Name)}</td>
-              <td style="font-family:monospace;font-size:12px;color:#888;">${u.Id.substring(0, 12)}...</td>
+              <td style="font-family:monospace;font-size:12px;color:#888;">${escapeHtml(u.Id)}</td>
               <td><span class="role-badge ${getRoleClass(u)}">${getRoleLabel(u)}</span></td>
-              <td>${u.Policy?.IsDisabled ? '❌ 已禁用' : u.Policy?.IsHidden ? '🔒 隐藏' : '✅ 正常'}</td>
-              <td>${u.HasPassword ? '✅ 已设置' : '❌ 未设置'}</td>
+              <td title="${u.Policy?.IsDisabled ? '已禁用' : u.Policy?.IsHidden ? '隐藏' : '正常'}">${u.Policy?.IsDisabled ? '❌' : u.Policy?.IsHidden ? '🔒' : '✅'}</td>
+              <td title="${u.HasPassword ? '已设置' : '未设置'}">${u.HasPassword ? '✅' : '❌'}</td>
             </tr>`).join('')}
           </tbody>
         </table>`
