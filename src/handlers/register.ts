@@ -98,8 +98,13 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
     }
 
     // 检查使用次数限制
-    if (invite.maxUses !== -1 && invite.useCount >= invite.maxUses) {
-      return renderRegisterError(env, '邀请码已失效（使用次数已用完）');
+        // 通过 Durable Object 原子增量邀请码使用次数
+    const counterId = env.INVITE_COUNTER.idFromName(inviteCode);
+    const counterStub = env.INVITE_COUNTER.get(counterId);
+    const useResult = await counterStub.tryUse(inviteCode, invite.maxUses);
+
+    if (!useResult.success) {
+      return renderRegisterError(env, useResult.message || '邀请码已失效');
     }
 
     // 调用 Emby API 创建用户（从模板复制配置）
@@ -114,36 +119,18 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       const user = await createUser(env.EMBY_SERVER_URL, env.EMBY_API_KEY, username, password, templateUserId);
       console.log(`[Register] 用户创建成功: ${username} (ID: ${user.Id})`);
 
-      // 标记邀请码已使用（重新读取以缩小竞态窗口）
-      const freshData = await env.INVITE_CODES.get(inviteKey);
-      if (freshData) {
-        try {
-          const freshInvite = JSON.parse(freshData);
-          if (freshInvite.maxUses !== -1 && freshInvite.useCount >= freshInvite.maxUses) {
-            console.warn(`[Register] 邀请码 ${inviteCode} 已被其他请求使用完毕`);
-            return renderRegisterError(env, '邀请码已失效（使用次数已用完）');
-          }
-          freshInvite.useCount = (freshInvite.useCount || 0) + 1;
-          if (freshInvite.maxUses !== -1 && freshInvite.useCount >= freshInvite.maxUses) {
-            freshInvite.usedAt = new Date().toISOString();
-            freshInvite.usedBy = username;
-          }
-          await env.INVITE_CODES.put(inviteKey, JSON.stringify(freshInvite));
-        } catch {
-          // 解析失败时回退到原有的 invite 对象
-          invite.useCount = (invite.useCount || 0) + 1;
-          if (invite.maxUses !== -1 && invite.useCount >= invite.maxUses) {
-            invite.usedAt = new Date().toISOString();
-            invite.usedBy = username;
-          }
-          await env.INVITE_CODES.put(inviteKey, JSON.stringify(invite));
+      // 更新邀请码元数据（usedAt/usedBy）—— 非关键操作，失败不影响主流程
+      try {
+        const updatedInvite = await env.INVITE_CODES.get(inviteKey);
+        if (updatedInvite) {
+          const parsed = JSON.parse(updatedInvite);
+          parsed.usedAt = new Date().toISOString();
+          parsed.usedBy = username;
+          await env.INVITE_CODES.put(inviteKey, JSON.stringify(parsed));
         }
-      } else {
-        // KV 中无数据（异常情况），仍然写入更新后的 invite
-        await env.INVITE_CODES.put(inviteKey, JSON.stringify(invite));
-      }
+      } catch {}
 
-      // 重定向到成功页，使用完整 URL
+      // 重定向到成功页
       const successUrl = new URL(request.url);
       successUrl.pathname = '/success';
       successUrl.search = `?username=${encodeURIComponent(username)}`;

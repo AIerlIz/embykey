@@ -9,6 +9,16 @@ keep_vars = true
 binding = "INVITE_CODES"
 id = "8a98206b2a5d4db0b08193dd966148df"
 
+# Durable Object — 邀请码原子计数器
+[[durable_objects.bindings]]
+name = "INVITE_COUNTER"
+class_name = "InviteCounter"
+
+# DO 迁移
+[[migrations]]
+tag = "v1"
+new_classes = ["InviteCounter"]
+
 # ==========================================
 # 环境变量配置说明
 # ==========================================

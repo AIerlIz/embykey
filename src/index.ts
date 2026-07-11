@@ -3,6 +3,7 @@ import { Env } from './types';
 import { handleRegisterGet, handleRegisterPost, handleSuccessWithRequest } from './handlers/register';
 import { handleAdminLoginGet, handleAdminLoginPost, handleAdminLogout, handleAdminDashboard, handleInviteCodesPost, handleInviteCodesDelete, handleTemplateUserPost, handleUserToggleDisable, handleUserDelete } from './handlers/admin';
 import { handleForgotPasswordGet, handleForgotPasswordPost } from './handlers/forgot-password';
+import { InviteCounter } from './durable-objects/invite-counter';
 
 // Hono app with typed Bindings
 const app = new Hono<{ Bindings: Env }>();

@@ -56,6 +56,7 @@ export interface Env {
   TURNSTILE_SECRET_KEY: string;
   ADMIN_SESSION_SECRET: string;
   INVITE_CODES: KVNamespace;
+  INVITE_COUNTER: DurableObjectNamespace;
 }
 
 // ====== Session 类型 ======
