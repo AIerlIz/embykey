@@ -248,7 +248,47 @@ export async function getUsers(serverUrl: string, apiKey: string): Promise<EmbyU
 /**
  * 获取媒体库统计数据
  */
-export async function getLibraryStats(
+
+/**
+ * 获取用户的继续观看项目数
+ */
+export async function getUserResumeCount(
+  serverUrl: string,
+  apiKey: string,
+  userId: string
+): Promise<number> {
+  try {
+    const result = await embyApiCall<any>(serverUrl, apiKey, `/Users/${userId}/Items/Resume?Limit=0`);
+    return result.TotalRecordCount || 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * 批量获取多个用户的继续观看项目数
+ */
+export async function getUsersResumeCounts(
+  serverUrl: string,
+  apiKey: string,
+  userIds: string[]
+): Promise<Record<string, number>> {
+  const results: Record<string, number> = {};
+  const entries = await Promise.all(
+    userIds.map(async (id) => {
+      const count = await getUserResumeCount(serverUrl, apiKey, id);
+      return [id, count] as const;
+    })
+  );
+  for (const [id, count] of entries) {
+    results[id] = count;
+  }
+  return results;
+}
+
+/**
+ * 获取媒体库统计数据
+ *
   serverUrl: string,
   apiKey: string
 ): Promise<EmbyLibraryStats> {

@@ -11,7 +11,8 @@ export function renderAdminDashboard(
   embyUsers: EmbyUser[],
   inviteCodes: InviteCode[],
   templateUserId: string = '',
-  csrfToken: string = ''
+  csrfToken: string = '',
+  resumeCounts: Record<string, number> = {}
 ): string {
   const adminUsers = embyUsers.filter(u => u.IsAdministrator);
   const regularUsers = embyUsers.filter(u => !u.IsAdministrator);
@@ -418,6 +419,14 @@ export function renderAdminDashboard(
       <div class="number">${inviteCodes.filter(c => c.maxUses === -1 || c.useCount < c.maxUses).length}</div>
       <div class="label">可用邀请码</div>
     </div>
+    <div class="stat-item">
+      <div class="number">${regularUsers.filter(u => u.LastActivityDate && Date.now() - new Date(u.LastActivityDate).getTime() < 7 * 86400000).length}</div>
+      <div class="label">本周活跃</div>
+    </div>
+    <div class="stat-item">
+      <div class="number">${regularUsers.filter(u => u.LastActivityDate && Date.now() - new Date(u.LastActivityDate).getTime() < 30 * 86400000).length}</div>
+      <div class="label">本月活跃</div>
+    </div>
   </div>
 
   <!-- 生成邀请码 -->
@@ -522,6 +531,7 @@ export function renderAdminDashboard(
               <th>状态</th>
               <th>密码</th>
               <th>最后活跃</th>
+              <th>播放中</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -533,6 +543,7 @@ export function renderAdminDashboard(
               <td title="${u.Policy?.IsDisabled ? '已禁用' : u.Policy?.IsHidden ? '隐藏' : '正常'}">${u.Policy?.IsDisabled ? '❌' : u.Policy?.IsHidden ? '🔒' : '✅'}</td>
               <td title="${u.HasPassword ? '已设置' : '未设置'}">${u.HasPassword ? '✅' : '❌'}</td>
               <td style="font-size:12px;color:#888;white-space:nowrap;">${u.LastActivityDate ? new Date(u.LastActivityDate).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+              <td style="font-size:12px;text-align:center;">${resumeCounts[u.Id || ''] ? resumeCounts[u.Id || ''] : '—'}</td>
               <td>
                 ${u.IsAdministrator ? '' : `<button class="btn btn-sm ${u.Policy?.IsDisabled ? 'btn-success' : 'btn-warning'}" onclick="toggleUser('${escapeHtml(u.Id)}', ${!u.Policy?.IsDisabled})">${u.Policy?.IsDisabled ? '启用' : '禁用'}</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteUser('${escapeHtml(u.Id)}', '${escapeHtml(u.Name)}')">删除</button>`}

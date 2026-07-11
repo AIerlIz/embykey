@@ -1,5 +1,5 @@
 import { Env, InviteCode, EmbyUser } from '../types';
-import { createUser, getUsers, validateAdmin, deleteUser, toggleUserDisabled, getServerName } from '../services/emby';
+import { createUser, getUsers, validateAdmin, deleteUser, toggleUserDisabled, getServerName, getUserResumeCount } from '../services/emby';
 import { renderAdminLoginPage } from '../views/admin-login';
 import { renderAdminDashboard } from '../views/admin-dashboard';
 import { checkRateLimit, getClientIp } from '../utils/rate-limit';
@@ -200,7 +200,23 @@ export async function handleAdminDashboard(request: Request, env: Env): Promise<
     } catch {}
 
     const serverName = await getServerName(env);
-    const html = renderAdminDashboard(env, serverName, session.username, embyUsers, inviteCodes, templateUserId, session.csrfToken);
+
+    // 获取每个用户的继续观看数量（仅非管理员，并行请求）
+    const resumeCounts: Record<string, number> = {};
+    const regularUserIds = embyUsers.filter(u => !u.IsAdministrator && u.Id).map(u => u.Id!);
+    if (regularUserIds.length > 0) {
+      const counts = await Promise.all(
+        regularUserIds.map(async (id) => {
+          const count = await getUserResumeCount(env.EMBY_SERVER_URL, env.EMBY_API_KEY, id);
+          return [id, count] as const;
+        })
+      );
+      for (const [id, count] of counts) {
+        resumeCounts[id] = count;
+      }
+    }
+
+    const html = renderAdminDashboard(env, serverName, session.username, embyUsers, inviteCodes, templateUserId, session.csrfToken, resumeCounts);
     return new Response(html, {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
