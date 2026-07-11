@@ -97,27 +97,23 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       return renderRegisterError(env, '邀请码数据异常');
     }
 
-    // 原子化使用邀请码（优先使用 Durable Object，不可用时回退到 KV）
-    let inviteUseSuccess = false;
-    let inviteUseMessage = '';
+    // 校验邀请码可用次数（KV 预检）
+    if (invite.maxUses !== -1 && invite.useCount >= invite.maxUses) {
+      return renderRegisterError(env, '邀请码已失效（使用次数已用完）');
+    }
+
+    // Durable Object 原子递增，防止并发竞态
     try {
       if (env.INVITE_COUNTER) {
         const counterId = env.INVITE_COUNTER.idFromName(inviteCode);
         const counterStub: any = env.INVITE_COUNTER.get(counterId);
         const useResult: any = await counterStub.tryUse(inviteCode, invite.maxUses);
-        inviteUseSuccess = useResult.success;
-        inviteUseMessage = useResult.message || '';
-      } else {
-        console.warn('[Register] INVITE_COUNTER DO 未绑定，使用 KV 方式（非原子操作）');
-        inviteUseSuccess = true; // KV 方式在后面处理
+        if (!useResult.success) {
+          return renderRegisterError(env, useResult.message || '邀请码已失效');
+        }
       }
     } catch (doErr: any) {
-      console.error('[Register] Durable Object 调用失败，回退到 KV:', doErr.message);
-      inviteUseSuccess = true; // 回退到 KV 方式
-    }
-
-    if (!inviteUseSuccess) {
-      return renderRegisterError(env, inviteUseMessage || '邀请码已失效');
+      console.error('[Register] DO 调用失败，继续执行:', doErr.message);
     }
 
     // 调用 Emby API 创建用户（从模板复制配置）
@@ -132,7 +128,7 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       const user = await createUser(env.EMBY_SERVER_URL, env.EMBY_API_KEY, username, password, templateUserId);
       console.log(`[Register] 用户创建成功: ${username} (ID: ${user.Id})`);
 
-      // 更新邀请码使用次数和元数据（DO 不可用时作为回退计数）
+      // 更新邀请码使用次数和元数据
       try {
         const updatedInvite = await env.INVITE_CODES.get(inviteKey);
         if (updatedInvite) {
