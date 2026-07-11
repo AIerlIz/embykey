@@ -137,9 +137,7 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
         const updatedInvite = await env.INVITE_CODES.get(inviteKey);
         if (updatedInvite) {
           const parsed = JSON.parse(updatedInvite);
-          if (!env.INVITE_COUNTER) {
-            parsed.useCount = (parsed.useCount || 0) + 1;
-          }
+          parsed.useCount = (parsed.useCount || 0) + 1;
           parsed.usedAt = new Date().toISOString();
           parsed.usedBy = username;
           await env.INVITE_CODES.put(inviteKey, JSON.stringify(parsed));
