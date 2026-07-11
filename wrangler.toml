@@ -17,7 +17,7 @@ class_name = "InviteCounter"
 # DO 迁移
 [[migrations]]
 tag = "v1"
-new_classes = ["InviteCounter"]
+new_sqlite_classes = ["InviteCounter"]
 
 # ==========================================
 # 环境变量配置说明
