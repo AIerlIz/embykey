@@ -1,15 +1,12 @@
 // Workers 兼容垫片 — 替代 `isomorphic-fetch`
 // Workers 中 fetch 是全局可用的，无需额外 polyfill
-// 使用 export = 模式匹配 SDK 的 `import * as X from "isomorphic-fetch"` 用法
 
-function fetchWrapper(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+const _Headers: any = (globalThis as any).Headers;
+const _Request: any = (globalThis as any).Request;
+const _Response: any = (globalThis as any).Response;
+
+export default function fetchWrapper(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   return fetch(input, init);
 }
 
-namespace fetchWrapper {
-  export const Headers = (globalThis as any).Headers as typeof Headers;
-  export const Request = (globalThis as any).Request as typeof Request;
-  export const Response = (globalThis as any).Response as typeof Response;
-}
-
-export = fetchWrapper;
+export { _Headers as Headers, _Request as Request, _Response as Response };
