@@ -152,33 +152,48 @@ export async function createUser(
   // 3. 如果指定了模板用户，复制策略和配置
   if (templateUserId) {
     try {
-      const policy = await getUserPolicy(serverUrl, apiKey, templateUserId);
-      if (policy) {
-        await updateUserPolicy(serverUrl, apiKey, newUser.Id, policy);
+      // 通过 GET /Users/{Id}?Fields=Policy,Configuration 获取模板用户的策略和配置
+      const templateData = await getUserWithPolicy(serverUrl, apiKey, templateUserId);
+      if (templateData) {
+        const templatePolicy = templateData.Policy;
+        const templateConfig = templateData.Configuration;
+        
+        if (templatePolicy) {
+          try {
+            await updateUserPolicy(serverUrl, apiKey, newUser.Id, templatePolicy);
+            console.log(`[Template] 模板用户策略已复制到新用户 ${username}`);
+          } catch (e: any) {
+            console.warn(`[Template] 复制策略失败: ${e.message}`);
+          }
+        }
+        
+        if (templateConfig) {
+          try {
+            await updateUserConfiguration(serverUrl, apiKey, newUser.Id, templateConfig);
+            console.log(`[Template] 模板用户配置已复制到新用户 ${username}`);
+          } catch (e: any) {
+            console.warn(`[Template] 复制配置失败: ${e.message}`);
+          }
+        }
       }
     } catch (e: any) {
-      if (String(e.message || '').includes('(404)')) {
-        console.warn('[Template] 模板用户 Policy 端点不可用，已跳过:', e.message);
-      } else {
-        console.error('[Template] 复制模板用户策略失败:', e.message);
-      }
-    }
-
-    try {
-      const config = await getUserConfiguration(serverUrl, apiKey, templateUserId);
-      if (config) {
-        await updateUserConfiguration(serverUrl, apiKey, newUser.Id, config);
-      }
-    } catch (e: any) {
-      if (String(e.message || '').includes('(404)')) {
-        console.warn('[Template] 模板用户 Configuration 端点不可用，已跳过:', e.message);
-      } else {
-        console.error('[Template] 复制模板用户配置失败:', e.message);
-      }
+      console.warn(`[Template] 获取模板用户数据失败: ${e.message}`);
     }
   }
 
   return normalizeUser(newUser);
+}
+
+/**
+ * 获取含策略和配置的用户对象 — GET /Users/{Id}?Fields=Policy,Configuration
+ * 替代不可用的独立 Policy/Configuration 端点
+ */
+export async function getUserWithPolicy(
+  serverUrl: string,
+  apiKey: [redacted],
+  userId: string
+): Promise<any> {
+  return embyApiCall<any>(serverUrl, apiKey, `/Users/${userId}?Fields=Policy,Configuration`);
 }
 
 /**
