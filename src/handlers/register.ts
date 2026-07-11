@@ -40,8 +40,7 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
     // CSRF 防护：验证请求来源
     const origin = request.headers.get('Origin') || request.headers.get('Referer') || '';
     const url = new URL(request.url);
-    const allowedOrigin = url.protocol + '//' + url.host;
-    if (origin && !origin.startsWith(allowedOrigin)) {
+    if (origin && origin !== url.origin) {
       return renderRegisterError(env, '非法请求来源');
     }
 
