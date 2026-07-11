@@ -70,6 +70,8 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       if (!turnstileValid) {
         return renderRegisterError(env, '人机验证失败，请重试');
       }
+    } else {
+      console.warn('[Register] TURNSTILE_SECRET_KEY 未设置，人机验证已跳过');
     }
 
     // 验证邀请码
@@ -126,9 +128,8 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       console.error(`[Register] 错误信息:`, err);
       console.error(`[Register] 错误堆栈:`, err.stack);
       
-      // 返回更详细的错误信息（开发调试）
-      const errorMsg = err.message || '创建用户失败，请稍后重试或联系管理员';
-      return renderRegisterError(env, errorMsg);
+      // 用户只显示通用错误信息，详细错误已记录到日志
+      return renderRegisterError(env, '创建用户失败，请稍后重试或联系管理员');
     }
 
   } catch (err: any) {
