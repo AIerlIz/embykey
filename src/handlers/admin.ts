@@ -266,7 +266,7 @@ export async function handleInviteCodesPost(request: Request, env: Env): Promise
 }
 
 // DELETE /admin/invite-codes/:code - 删除邀请码
-export async function handleInviteCodesDelete(request: Request, env: Env): Promise<Response> {
+export async function handleInviteCodesDelete(request: Request, env: Env, code: string): Promise<Response> {
   const session = await validateAdminRequest(request, env);
   if (!session) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {

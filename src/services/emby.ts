@@ -248,6 +248,12 @@ export async function getUsers(serverUrl: string, apiKey: string): Promise<EmbyU
 /**
  * 获取媒体库统计数据
  */
+export async function getLibraryStats(
+  serverUrl: string,
+  apiKey: string
+): Promise<EmbyLibraryStats> {
+  return embyApiCall<EmbyLibraryStats>(serverUrl, apiKey, '/Items/Counts');
+}
 
 /**
  * 获取用户的继续观看项目数

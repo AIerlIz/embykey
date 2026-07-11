@@ -1,3 +1,5 @@
+import { Env } from '../types';
+
 /**
  * 速率限制 — 基于 KV 的每 IP 每分钟请求计数
  */

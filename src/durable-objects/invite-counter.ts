@@ -1,4 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
+import { Env } from '../types';
 
 /**
  * Durable Object — 邀请码原子计数器

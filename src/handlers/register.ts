@@ -97,11 +97,10 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       return renderRegisterError(env, '邀请码数据异常');
     }
 
-    // 检查使用次数限制
-        // 通过 Durable Object 原子增量邀请码使用次数
+    // 通过 Durable Object 原子增量邀请码使用次数
     const counterId = env.INVITE_COUNTER.idFromName(inviteCode);
     const counterStub = env.INVITE_COUNTER.get(counterId);
-    const useResult = await counterStub.tryUse(inviteCode, invite.maxUses);
+    const useResult: any = await counterStub.tryUse(inviteCode, invite.maxUses);
 
     if (!useResult.success) {
       return renderRegisterError(env, useResult.message || '邀请码已失效');
