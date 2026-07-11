@@ -188,6 +188,7 @@ export function renderRegisterPage(
 
     <div class="login-link">
       已有账号？<a href="${escapeHtml(env.EMBY_SERVER_URL || '#')}" target="_blank">前往登录</a>
+      · <a href="/forgot-password">忘记密码</a>
     </div>
   </div>
 

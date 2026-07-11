@@ -1,5 +1,6 @@
 import { Env } from './types';
 import { handleRegisterGet, handleRegisterPost, handleSuccessWithRequest } from './handlers/register';
+import { handleForgotPasswordGet, handleForgotPasswordPost } from './handlers/forgot-password';
 import { handleAdminLoginGet, handleAdminLoginPost, handleAdminLogout, handleAdminDashboard, handleInviteCodesPost, handleInviteCodesDelete, handleTemplateUserPost, handleUserToggleDisable, handleUserDelete } from './handlers/admin';
 
 export default {
@@ -39,6 +40,16 @@ export default {
         case '/success':
           if (method === 'GET') {
             return await handleSuccessWithRequest(request, env);
+          }
+          break;
+
+        // ---- 忘记密码 ----
+        case '/forgot-password':
+          if (method === 'GET') {
+            return await handleForgotPasswordGet(env);
+          }
+          if (method === 'POST') {
+            return await handleForgotPasswordPost(request, env);
           }
           break;
 

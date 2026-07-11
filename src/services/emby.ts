@@ -330,3 +330,43 @@ export async function toggleUserDisabled(
   policy.IsDisabled = disabled;
   await updateUserPolicy(serverUrl, apiKey, userId, policy);
 }
+
+/**
+ * 发起忘记密码流程（Emby 会向用户邮箱发送 PIN）
+ */
+export async function forgotPassword(
+  serverUrl: string,
+  username: string
+): Promise<any> {
+  const url = `${serverUrl.replace(/\/+$/, '')}/emby/Users/ForgotPassword`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ EnteredUsername: username }),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`ForgotPassword API error: ${text}`);
+  }
+  return response.json();
+}
+
+/**
+ * 验证 PIN 并获取重置令牌
+ */
+export async function forgotPasswordPin(
+  serverUrl: string,
+  pin: string
+): Promise<any> {
+  const url = `${serverUrl.replace(/\/+$/, '')}/emby/Users/ForgotPassword/Pin`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ Pin: pin }),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`ForgotPasswordPin API error: ${text}`);
+  }
+  return response.json();
+}
