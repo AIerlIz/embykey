@@ -374,20 +374,32 @@ async function validateAdminRequest(request: Request, env: Env): Promise<Session
 async function listInviteCodes(env: Env): Promise<InviteCode[]> {
   const codes: InviteCode[] = [];
   try {
-    // 列出所有 invite: 前缀的 key
     const list = await env.INVITE_CODES.list({ prefix: 'invite:' });
     for (const key of list.keys) {
       const data = await env.INVITE_CODES.get(key.name);
       if (data) {
         try {
-          codes.push(JSON.parse(data));
+          const parsed = JSON.parse(data);
+          // 从 DO 查询实时使用次数（DO 不可用时回退到 KV 记录的次数）
+          if (env.INVITE_COUNTER) {
+            try {
+              const code = parsed.code;
+              const counterId = env.INVITE_COUNTER.idFromName(code);
+              const counterStub: any = env.INVITE_COUNTER.get(counterId);
+              const countResult: any = await counterStub.getCount();
+              parsed.useCount = countResult.useCount || 0;
+            } catch (doErr) {
+              console.error('Failed to query DO count for code:', doErr);
+              // 保留 KV 的 useCount
+            }
+          }
+          codes.push(parsed);
         } catch {}
       }
     }
   } catch (e) {
     console.error('Failed to list invite codes:', e);
   }
-  // 按创建时间倒序
   codes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   return codes;
 }
