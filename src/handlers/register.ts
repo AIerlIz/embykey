@@ -105,12 +105,16 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
     // Durable Object 原子递增，防止并发竞态
     try {
       if (env.INVITE_COUNTER) {
+        console.log(`[Register] DO 可用，尝试通过 DO 申请邀请码: ${inviteCode}`);
         const counterId = env.INVITE_COUNTER.idFromName(inviteCode);
         const counterStub: any = env.INVITE_COUNTER.get(counterId);
         const useResult: any = await counterStub.tryUse(inviteCode, invite.maxUses);
+        console.log(`[Register] DO 返回结果: success=${useResult.success}, count=${useResult.useCount}`);
         if (!useResult.success) {
           return renderRegisterError(env, useResult.message || '邀请码已失效');
         }
+      } else {
+        console.warn('[Register] env.INVITE_COUNTER 未定义，DO 不可用');
       }
     } catch (doErr: any) {
       console.error('[Register] DO 调用失败，继续执行:', doErr.message);

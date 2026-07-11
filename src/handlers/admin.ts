@@ -384,12 +384,14 @@ async function listInviteCodes(env: Env): Promise<InviteCode[]> {
           if (env.INVITE_COUNTER) {
             try {
               const code = parsed.code;
+              console.log(`[Dashboard] 查询 DO 邀请码 ${code} 的使用次数`);
               const counterId = env.INVITE_COUNTER.idFromName(code);
               const counterStub: any = env.INVITE_COUNTER.get(counterId);
               const countResult: any = await counterStub.getCount();
+              console.log(`[Dashboard] DO 返回: ${code} -> useCount=${countResult.useCount}`);
               parsed.useCount = countResult.useCount || 0;
             } catch (doErr) {
-              console.error('Failed to query DO count for code:', doErr);
+              console.error(`[Dashboard] 查询 DO 失败:`, doErr);
               // 保留 KV 的 useCount
             }
           }
