@@ -384,7 +384,9 @@ export async function toggleUserDisabled(
   userId: string,
   disabled: boolean
 ): Promise<void> {
-  const policy = await getUserPolicy(serverUrl, apiKey, userId);
+  // 通过 GET /Users/{Id}?Fields=Policy 获取用户策略
+  const userData = await getUserWithPolicy(serverUrl, apiKey, userId);
+  const policy = userData.Policy || {};
   policy.IsDisabled = disabled;
   await updateUserPolicy(serverUrl, apiKey, userId, policy);
 }
