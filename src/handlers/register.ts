@@ -106,13 +106,34 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       const user = await createUser(env.EMBY_SERVER_URL, env.EMBY_API_KEY, username, password, templateUserId);
       console.log(`[Register] 用户创建成功: ${username} (ID: ${user.Id})`);
 
-      // 标记邀请码已使用
-      invite.useCount = (invite.useCount || 0) + 1;
-      if (invite.maxUses !== -1 && invite.useCount >= invite.maxUses) {
-        invite.usedAt = new Date().toISOString();
-        invite.usedBy = username;
+      // 标记邀请码已使用（重新读取以缩小竞态窗口）
+      const freshData = await env.INVITE_CODES.get(inviteKey);
+      if (freshData) {
+        try {
+          const freshInvite = JSON.parse(freshData);
+          if (freshInvite.maxUses !== -1 && freshInvite.useCount >= freshInvite.maxUses) {
+            console.warn(`[Register] 邀请码 ${inviteCode} 已被其他请求使用完毕`);
+            return renderRegisterError(env, '邀请码已失效（使用次数已用完）');
+          }
+          freshInvite.useCount = (freshInvite.useCount || 0) + 1;
+          if (freshInvite.maxUses !== -1 && freshInvite.useCount >= freshInvite.maxUses) {
+            freshInvite.usedAt = new Date().toISOString();
+            freshInvite.usedBy = username;
+          }
+          await env.INVITE_CODES.put(inviteKey, JSON.stringify(freshInvite));
+        } catch {
+          // 解析失败时回退到原有的 invite 对象
+          invite.useCount = (invite.useCount || 0) + 1;
+          if (invite.maxUses !== -1 && invite.useCount >= invite.maxUses) {
+            invite.usedAt = new Date().toISOString();
+            invite.usedBy = username;
+          }
+          await env.INVITE_CODES.put(inviteKey, JSON.stringify(invite));
+        }
+      } else {
+        // KV 中无数据（异常情况），仍然写入更新后的 invite
+        await env.INVITE_CODES.put(inviteKey, JSON.stringify(invite));
       }
-      await env.INVITE_CODES.put(inviteKey, JSON.stringify(invite));
 
       // 重定向到成功页，使用完整 URL
       const successUrl = new URL(request.url);
