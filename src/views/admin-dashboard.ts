@@ -531,6 +531,7 @@ export function renderAdminDashboard(
               <th>状态</th>
               <th>密码</th>
               <th>最后活跃</th>
+              <th>最后登录</th>
               <th>播放中</th>
               <th>操作</th>
             </tr>
@@ -542,7 +543,8 @@ export function renderAdminDashboard(
               <td><span class="role-badge ${getRoleClass(u)}">${getRoleLabel(u)}</span></td>
               <td title="${u.Policy?.IsDisabled ? '已禁用' : u.Policy?.IsHidden ? '隐藏' : '正常'}">${u.Policy?.IsDisabled ? '❌' : u.Policy?.IsHidden ? '🔒' : '✅'}</td>
               <td title="${u.HasPassword ? '已设置' : '未设置'}">${u.HasPassword ? '✅' : '❌'}</td>
-              <td style="font-size:12px;color:#888;white-space:nowrap;">${u.LastActivityDate ? new Date(u.LastActivityDate).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+              <td style="font-size:12px;color:#888;white-space:nowrap;" title="${u.LastActivityDate ? new Date(u.LastActivityDate).toLocaleString('zh-CN') : ''}">${formatRelativeTime(u.LastActivityDate)}</td>
+              <td style="font-size:12px;color:#888;white-space:nowrap;" title="${u.LastLoginDate ? new Date(u.LastLoginDate).toLocaleString('zh-CN') : ''}">${formatRelativeTime(u.LastLoginDate)}</td>
               <td style="font-size:12px;text-align:center;">${resumeCounts[u.Id || ''] ? resumeCounts[u.Id || ''] : '—'}</td>
               <td>
                 ${u.IsAdministrator ? '' : `<button class="btn btn-sm ${u.Policy?.IsDisabled ? 'btn-success' : 'btn-warning'}" onclick="toggleUser('${escapeHtml(u.Id)}', ${!u.Policy?.IsDisabled})">${u.Policy?.IsDisabled ? '启用' : '禁用'}</button>
@@ -704,6 +706,23 @@ function formatDate(iso: string): string {
     return d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
   } catch {
     return iso;
+  }
+}
+
+function formatRelativeTime(dateStr: string | undefined): string {
+  if (!dateStr) return '—';
+  try {
+    const d = new Date(dateStr);
+    const now = Date.now();
+    const diff = now - d.getTime();
+    if (diff < 60000) return '刚刚';
+    if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+    if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+    if (diff < 2592000000) return Math.floor(diff / 604800000) + '周前';
+    return d.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+  } catch {
+    return dateStr;
   }
 }
 
