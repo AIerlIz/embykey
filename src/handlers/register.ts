@@ -128,11 +128,14 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
       const user = await createUser(env.EMBY_SERVER_URL, env.EMBY_API_KEY, username, password, templateUserId);
       console.log(`[Register] 用户创建成功: ${username} (ID: ${user.Id})`);
 
-      // 更新邀请码元数据（DO 已处理计数，这里只记录使用人和时间）
+      // 更新邀请码元数据（DO 已处理计数；DO 不可用时 KV 自行计数）
       try {
         const updatedInvite = await env.INVITE_CODES.get(inviteKey);
         if (updatedInvite) {
           const parsed = JSON.parse(updatedInvite);
+          if (!env.INVITE_COUNTER) {
+            parsed.useCount = (parsed.useCount || 0) + 1;
+          }
           parsed.usedAt = new Date().toISOString();
           parsed.usedBy = username;
           await env.INVITE_CODES.put(inviteKey, JSON.stringify(parsed));
