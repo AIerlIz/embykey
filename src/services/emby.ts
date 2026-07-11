@@ -252,7 +252,7 @@ export async function updateUserConfiguration(
  * 获取用户列表
  */
 export async function getUsers(serverUrl: string, apiKey: string): Promise<EmbyUser[]> {
-  const users = await embyApiCall<any[]>(serverUrl, apiKey, '/Users');
+  const users = await embyApiCall<any[]>(serverUrl, apiKey, '/Users?Fields=Policy,Configuration,PrimaryImageTag,LastLoginDate,LastActivityDate');
   // 标准化所有用户对象，确保 IsAdministrator 等字段正确映射
   return users.map(u => normalizeUser(u));
 }
