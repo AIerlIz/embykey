@@ -10,7 +10,8 @@ export function renderAdminDashboard(
   currentUser: string,
   embyUsers: EmbyUser[],
   inviteCodes: InviteCode[],
-  templateUserId: string = ''
+  templateUserId: string = '',
+  csrfToken: string = ''
 ): string {
   const adminUsers = embyUsers.filter(u => u.IsAdministrator);
   const regularUsers = embyUsers.filter(u => !u.IsAdministrator);
@@ -51,6 +52,7 @@ export function renderAdminDashboard(
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="csrf-token" content="${csrfToken}">
 <title>管理后台 - ${serverName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
@@ -556,6 +558,13 @@ export function renderAdminDashboard(
 <div id="toast" class="toast"></div>
 
 <script>
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+function fetchWithCsrf(url, options = {}) {
+  options.headers = { ...options.headers, 'X-CSRF-Token': csrfToken };
+  return fetch(url, options);
+}
+
 let currentShareCode = '';
 
 async function shareCode(code) {
@@ -596,7 +605,7 @@ function copyShareLink() {
 async function deleteCode(code) {
   if (!confirm('确定要删除邀请码 ' + code + ' 吗？')) return;
   try {
-    const res = await fetch('/admin/invite-codes/' + encodeURIComponent(code), { method: 'DELETE' });
+    const res = await fetchWithCsrf('/admin/invite-codes/' + encodeURIComponent(code), { method: 'DELETE' });
     const data = await res.json();
     if (data.success) {
       showToast('✅ 邀请码已删除');
@@ -613,7 +622,7 @@ async function toggleUser(userId, disabled) {
   try {
     const formData = new FormData();
     formData.append('disabled', String(disabled));
-    const res = await fetch('/admin/users/' + encodeURIComponent(userId) + '/toggle-disable', {
+    const res = await fetchWithCsrf('/admin/users/' + encodeURIComponent(userId) + '/toggle-disable', {
       method: 'POST',
       body: formData,
     });
@@ -633,7 +642,7 @@ async function deleteUser(userId, userName) {
   if (!confirm('确定要删除用户 "' + userName + '" 吗？此操作不可恢复！')) return;
   try {
     const formData = new FormData();
-    const res = await fetch('/admin/users/' + encodeURIComponent(userId) + '/delete', {
+    const res = await fetchWithCsrf('/admin/users/' + encodeURIComponent(userId) + '/delete', {
       method: 'POST',
       body: formData,
     });

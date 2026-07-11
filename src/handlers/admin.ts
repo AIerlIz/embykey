@@ -22,15 +22,17 @@ function generateSessionToken(): string {
   return Array.from(buf, b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function createSession(env: Env, username: string): Promise<string> {
+async function createSession(env: Env, username: string): Promise<{ token: string; csrfToken: string }> {
   if (!env.INVITE_CODES) {
     console.error('[Session] INVITE_CODES KV 未绑定');
-    return '';
+    return { token: '', csrfToken: '' };
   }
   const token = generateSessionToken();
+  const csrfToken = generateSessionToken();
   const sessionData = {
     username,
     token,
+    csrfToken,
     expiresAt: Date.now() + 24 * 60 * 60 * 1000,
   };
   try {
@@ -40,10 +42,15 @@ async function createSession(env: Env, username: string): Promise<string> {
   } catch (e) {
     console.error('Failed to store session:', e);
   }
-  return token;
+  return { token, csrfToken };
 }
 
-async function validateSession(request: Request, env: Env): Promise<string | null> {
+interface SessionData {
+  username: string;
+  csrfToken: string;
+}
+
+async function getSession(request: Request, env: Env, requireCsrf?: string): Promise<SessionData | null> {
   if (!env.INVITE_CODES) {
     console.error('[Session] INVITE_CODES KV 未绑定，无法验证 session');
     return null;
@@ -63,7 +70,12 @@ async function validateSession(request: Request, env: Env): Promise<string | nul
       await env.INVITE_CODES.delete(`session:${token}`);
       return null;
     }
-    return session.username;
+    // CSRF 校验
+    if (requireCsrf && session.csrfToken !== requireCsrf) {
+      console.error('[Session] CSRF token 不匹配');
+      return null;
+    }
+    return { username: session.username, csrfToken: session.csrfToken };
   } catch {
     return null;
   }
@@ -112,7 +124,7 @@ export async function handleAdminLoginPost(request: Request, env: Env): Promise<
   }
 
   // 创建 session（等待存储到 KV）
-  const token = await createSession(env, admin.Name || '');
+  const { token } = await createSession(env, admin.Name || '');
 
   // 重定向到仪表盘，并设置 cookie
   const url = new URL(request.url);
@@ -151,8 +163,8 @@ export async function handleAdminLogout(request: Request, env: Env): Promise<Res
 
 // GET /admin/dashboard
 export async function handleAdminDashboard(request: Request, env: Env): Promise<Response> {
-  const username = await validateSession(request, env);
-  if (!username) {
+  const session = await getSession(request, env);
+  if (!session) {
     return redirectTo(request, '/admin');
   }
 
@@ -175,7 +187,7 @@ export async function handleAdminDashboard(request: Request, env: Env): Promise<
     } catch {}
 
     const serverName = await getServerName(env);
-    const html = renderAdminDashboard(env, serverName, username, embyUsers, inviteCodes, templateUserId);
+    const html = renderAdminDashboard(env, serverName, session.username, embyUsers, inviteCodes, templateUserId, session.csrfToken);
     return new Response(html, {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -190,8 +202,8 @@ export async function handleAdminDashboard(request: Request, env: Env): Promise<
 
 // POST /admin/invite-codes - 生成邀请码
 export async function handleInviteCodesPost(request: Request, env: Env): Promise<Response> {
-  const username = await validateSession(request, env);
-  if (!username) {
+  const session = await validateAdminRequest(request, env);
+  if (!session) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -225,9 +237,9 @@ export async function handleInviteCodesPost(request: Request, env: Env): Promise
 }
 
 // DELETE /admin/invite-codes/:code - 删除邀请码
-export async function handleInviteCodesDelete(request: Request, env: Env, code: string): Promise<Response> {
-  const username = await validateSession(request, env);
-  if (!username) {
+export async function handleInviteCodesDelete(request: Request, env: Env): Promise<Response> {
+  const session = await validateAdminRequest(request, env);
+  if (!session) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -252,8 +264,8 @@ export async function handleInviteCodesDelete(request: Request, env: Env, code: 
 
 // POST /admin/template-user - 设置模板用户
 export async function handleTemplateUserPost(request: Request, env: Env): Promise<Response> {
-  const username = await validateSession(request, env);
-  if (!username) {
+  const session = await validateAdminRequest(request, env);
+  if (!session) {
     return redirectTo(request, '/admin');
   }
 
@@ -281,8 +293,8 @@ export async function handleTemplateUserPost(request: Request, env: Env): Promis
 
 // POST /admin/users/:id/toggle-disable
 export async function handleUserToggleDisable(request: Request, env: Env, userId: string): Promise<Response> {
-  const username = await validateSession(request, env);
-  if (!username) {
+  const session = await validateAdminRequest(request, env);
+  if (!session) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
   }
 
@@ -299,8 +311,8 @@ export async function handleUserToggleDisable(request: Request, env: Env, userId
 
 // POST /admin/users/:id/delete
 export async function handleUserDelete(request: Request, env: Env, userId: string): Promise<Response> {
-  const username = await validateSession(request, env);
-  if (!username) {
+  const session = await validateAdminRequest(request, env);
+  if (!session) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
   }
 
@@ -323,6 +335,11 @@ function generateInviteCode(): string {
   }
   // 格式化为 4-4 方便阅读
   return code.substring(0, 4) + '-' + code.substring(4);
+}
+
+async function validateAdminRequest(request: Request, env: Env): Promise<SessionData | null> {
+  const csrfToken = request.headers.get('X-CSRF-Token') || '';
+  return getSession(request, env, csrfToken);
 }
 
 async function listInviteCodes(env: Env): Promise<InviteCode[]> {
