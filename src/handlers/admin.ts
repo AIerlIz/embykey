@@ -1,5 +1,5 @@
 import { Env, InviteCode, EmbyUser } from '../types';
-import { createUser, getUsers, validateAdmin } from '../services/emby';
+import { createUser, getUsers, validateAdmin, deleteUser, toggleUserDisabled } from '../services/emby';
 import { renderAdminLoginPage } from '../views/admin-login';
 import { renderAdminDashboard } from '../views/admin-dashboard';
 
@@ -247,6 +247,44 @@ export async function handleTemplateUserPost(request: Request, env: Env): Promis
   } catch (err: any) {
     console.error('Set template user error:', err);
     return redirectTo(request, '/admin/dashboard');
+  }
+}
+
+
+
+// === 用户操作 ===
+
+// POST /admin/users/:id/toggle-disable
+export async function handleUserToggleDisable(request: Request, env: Env, userId: string): Promise<Response> {
+  const username = await validateSession(request, env);
+  if (!username) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  try {
+    const formData = await request.formData();
+    const disabled = formData.get('disabled') === 'true';
+    await toggleUserDisabled(env.EMBY_SERVER_URL, env.EMBY_API_KEY, userId, disabled);
+    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  } catch (err: any) {
+    console.error('Toggle user disable error:', err);
+    return new Response(JSON.stringify({ error: '操作失败' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+  }
+}
+
+// POST /admin/users/:id/delete
+export async function handleUserDelete(request: Request, env: Env, userId: string): Promise<Response> {
+  const username = await validateSession(request, env);
+  if (!username) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  try {
+    await deleteUser(env.EMBY_SERVER_URL, env.EMBY_API_KEY, userId);
+    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  } catch (err: any) {
+    console.error('Delete user error:', err);
+    return new Response(JSON.stringify({ error: '删除失败' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 

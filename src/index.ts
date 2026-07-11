@@ -1,6 +1,6 @@
 import { Env } from './types';
 import { handleRegisterGet, handleRegisterPost, handleSuccessWithRequest } from './handlers/register';
-import { handleAdminLoginGet, handleAdminLoginPost, handleAdminDashboard, handleInviteCodesPost, handleInviteCodesDelete, handleTemplateUserPost } from './handlers/admin';
+import { handleAdminLoginGet, handleAdminLoginPost, handleAdminDashboard, handleInviteCodesPost, handleInviteCodesDelete, handleTemplateUserPost, handleUserToggleDisable, handleUserDelete } from './handlers/admin';
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -75,6 +75,16 @@ export default {
           const inviteCodeMatch = path.match(/^\/admin\/invite-codes\/(.+)$/);
           if (inviteCodeMatch && method === 'DELETE') {
             return await handleInviteCodesDelete(request, env, inviteCodeMatch[1]);
+          }
+          // 处理 POST /admin/users/:id/toggle-disable
+          const toggleDisableMatch = path.match(/^\/admin\/users\/(.+)\/toggle-disable$/);
+          if (toggleDisableMatch && method === 'POST') {
+            return await handleUserToggleDisable(request, env, toggleDisableMatch[1]);
+          }
+          // 处理 POST /admin/users/:id/delete
+          const userDeleteMatch = path.match(/^\/admin\/users\/(.+)\/delete$/);
+          if (userDeleteMatch && method === 'POST') {
+            return await handleUserDelete(request, env, userDeleteMatch[1]);
           }
           break;
       }

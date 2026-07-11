@@ -190,6 +190,16 @@ export function renderAdminDashboard(
     color: #b39ddb;
     border: 1px solid rgba(124,95,207,0.3);
   }
+  .btn-success {
+    background: rgba(76,175,80,0.2);
+    color: #81c784;
+    border: 1px solid rgba(76,175,80,0.3);
+  }
+  .btn-warning {
+    background: rgba(255,152,0,0.2);
+    color: #ffb74d;
+    border: 1px solid rgba(255,152,0,0.3);
+  }
   .btn-sm {
     padding: 4px 12px;
     font-size: 12px;
@@ -491,19 +501,22 @@ export function renderAdminDashboard(
           <thead>
             <tr>
               <th>用户名</th>
-              <th>用户 ID</th>
               <th>角色</th>
               <th>状态</th>
               <th>密码</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
             ${embyUsers.map(u => `<tr>
               <td>${escapeHtml(u.Name)}</td>
-              <td style="font-family:monospace;font-size:12px;color:#888;">${escapeHtml(u.Id)}</td>
               <td><span class="role-badge ${getRoleClass(u)}">${getRoleLabel(u)}</span></td>
               <td title="${u.Policy?.IsDisabled ? '已禁用' : u.Policy?.IsHidden ? '隐藏' : '正常'}">${u.Policy?.IsDisabled ? '❌' : u.Policy?.IsHidden ? '🔒' : '✅'}</td>
               <td title="${u.HasPassword ? '已设置' : '未设置'}">${u.HasPassword ? '✅' : '❌'}</td>
+              <td>
+                ${u.IsAdministrator ? '' : `<button class="btn btn-sm ${u.Policy?.IsDisabled ? 'btn-success' : 'btn-warning'}" onclick="toggleUser('${escapeHtml(u.Id)}', ${!u.Policy?.IsDisabled})">${u.Policy?.IsDisabled ? '启用' : '禁用'}</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteUser('${escapeHtml(u.Id)}', '${escapeHtml(u.Name)}')">删除</button>`}
+              </td>
             </tr>`).join('')}
           </tbody>
         </table>`
@@ -580,6 +593,46 @@ async function deleteCode(code) {
     const data = await res.json();
     if (data.success) {
       showToast('✅ 邀请码已删除');
+      setTimeout(() => location.reload(), 500);
+    } else {
+      showToast('❌ 删除失败');
+    }
+  } catch (e) {
+    showToast('❌ 删除失败');
+  }
+}
+
+async function toggleUser(userId, disabled) {
+  try {
+    const formData = new FormData();
+    formData.append('disabled', String(disabled));
+    const res = await fetch('/admin/users/' + encodeURIComponent(userId) + '/toggle-disable', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ 操作成功');
+      setTimeout(() => location.reload(), 500);
+    } else {
+      showToast('❌ 操作失败');
+    }
+  } catch (e) {
+    showToast('❌ 操作失败');
+  }
+}
+
+async function deleteUser(userId, userName) {
+  if (!confirm('确定要删除用户 "' + userName + '" 吗？此操作不可恢复！')) return;
+  try {
+    const formData = new FormData();
+    const res = await fetch('/admin/users/' + encodeURIComponent(userId) + '/delete', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ 用户已删除');
       setTimeout(() => location.reload(), 500);
     } else {
       showToast('❌ 删除失败');

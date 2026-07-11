@@ -252,3 +252,31 @@ export async function getLibraryStats(
 export async function getServerInfo(serverUrl: string, apiKey: string): Promise<any> {
   return embyApiCall(serverUrl, apiKey, '/System/Info');
 }
+
+
+/**
+ * 删除 Emby 用户
+ */
+export async function deleteUser(
+  serverUrl: string,
+  apiKey: [redacted],
+  userId: string
+): Promise<void> {
+  await embyApiCall(serverUrl, apiKey, `/Users/${userId}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * 切换用户禁用状态
+ */
+export async function toggleUserDisabled(
+  serverUrl: string,
+  apiKey: [redacted],
+  userId: string,
+  disabled: boolean
+): Promise<void> {
+  const policy = await getUserPolicy(serverUrl, apiKey, userId);
+  policy.IsDisabled = disabled;
+  await updateUserPolicy(serverUrl, apiKey, userId, policy);
+}
