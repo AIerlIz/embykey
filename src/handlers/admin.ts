@@ -121,7 +121,7 @@ export async function handleAdminLoginPost(request: Request, env: Env): Promise<
     status: 302,
     headers: {
       Location: absoluteUrl,
-      'Set-Cookie': `admin_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`,
+      'Set-Cookie': `admin_token=${token}; Path=/; HttpOnly; ${url.protocol === 'https:' ? 'Secure; ' : ''}SameSite=Lax; Max-Age=86400`,
     },
   });
 }
