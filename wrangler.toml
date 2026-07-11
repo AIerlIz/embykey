@@ -3,10 +3,8 @@ main = "src/index.ts"
 compatibility_date = "2024-03-20"
 keep_vars = true
 
-# KV 命名空间绑定 — 用于存储邀请码和 Session
-# 首次部署时 Wrangler 会自动创建命名空间并回写 ID
-[[kv_namespaces]]
-binding = "INVITE_CODES"
+# KV 命名空间绑定 — 在 Cloudflare Dashboard → Worker → 设置 → 绑定 (Bindings) 中手动绑定
+# Variable name 填 "INVITE_CODES"，选择已创建的 KV 命名空间
 
 # ==========================================
 # 环境变量配置说明
@@ -20,4 +18,3 @@ binding = "INVITE_CODES"
 
 [vars]
 # 可选：Emby 服务器名称（展示用），不设置时将自动从 Emby API 获取
-# EMBY_SERVER_NAME = "Emby Server"
