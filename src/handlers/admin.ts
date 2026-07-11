@@ -1,5 +1,5 @@
 import { Env, InviteCode, EmbyUser } from '../types';
-import { createUser, getUsers, validateAdmin, deleteUser, toggleUserDisabled } from '../services/emby';
+import { createUser, getUsers, validateAdmin, deleteUser, toggleUserDisabled, getServerName } from '../services/emby';
 import { renderAdminLoginPage } from '../views/admin-login';
 import { renderAdminDashboard } from '../views/admin-dashboard';
 
@@ -73,7 +73,8 @@ async function validateSession(request: Request, env: Env): Promise<string | nul
 
 // GET /admin
 export async function handleAdminLoginGet(env: Env): Promise<Response> {
-  const html = renderAdminLoginPage(env, null);
+  const serverName = await getServerName(env);
+  const html = renderAdminLoginPage(env, serverName, null);
   return new Response(html, {
     status: 200,
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -86,8 +87,10 @@ export async function handleAdminLoginPost(request: Request, env: Env): Promise<
   const username = (formData.get('username') as string || '').trim();
   const password = formData.get('password') as string || '';
 
+  const serverName = await getServerName(env);
+
   if (!username || !password) {
-    const html = renderAdminLoginPage(env, '请输入用户名和密码');
+    const html = renderAdminLoginPage(env, serverName, '请输入用户名和密码');
     return new Response(html, {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -101,7 +104,7 @@ export async function handleAdminLoginPost(request: Request, env: Env): Promise<
     if (!env.EMBY_SERVER_URL) {
       errorMsg = 'EMBY_SERVER_URL 未设置，请在 Cloudflare Dashboard 添加 Secret 变量';
     }
-    const html = renderAdminLoginPage(env, errorMsg);
+    const html = renderAdminLoginPage(env, serverName, errorMsg);
     return new Response(html, {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -150,7 +153,8 @@ export async function handleAdminDashboard(request: Request, env: Env): Promise<
       templateUserId = await env.INVITE_CODES.get('config:template_user_id') || '';
     } catch {}
 
-    const html = renderAdminDashboard(env, username, embyUsers, inviteCodes, templateUserId);
+    const serverName = await getServerName(env);
+    const html = renderAdminDashboard(env, serverName, username, embyUsers, inviteCodes, templateUserId);
     return new Response(html, {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },

@@ -6,10 +6,10 @@ import { Env, EmbyLibraryStats } from '../types';
  */
 export function renderRegisterPage(
   env: Env,
+  serverName: string,
   stats: EmbyLibraryStats | null,
   error?: string
 ): string {
-  const serverName = env.EMBY_SERVER_NAME || 'Emby Server';
   const turnstileSiteKey = env.TURNSTILE_SITE_KEY || '';
 
   return `<!DOCTYPE html>

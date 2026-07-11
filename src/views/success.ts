@@ -4,8 +4,7 @@ import { Env } from '../types';
  * 注册成功页
  * 展示服务器连接信息和客户端下载
  */
-export function renderSuccessPage(env: Env, username: string): string {
-  const serverName = env.EMBY_SERVER_NAME || 'Emby Server';
+export function renderSuccessPage(env: Env, serverName: string, username: string): string {
   const serverUrl = env.EMBY_SERVER_URL || '';
 
   return `<!DOCTYPE html>

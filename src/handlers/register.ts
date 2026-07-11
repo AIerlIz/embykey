@@ -1,11 +1,14 @@
 import { Env } from '../types';
-import { getLibraryStats, createUser } from '../services/emby';
+import { getLibraryStats, createUser, getServerName } from '../services/emby';
 import { renderRegisterPage } from '../views/register';
 import { renderSuccessPage } from '../views/success';
 
 // GET / - 注册页面（含媒体库统计）
 export async function handleRegisterGet(env: Env): Promise<Response> {
   try {
+    // 获取服务器名称
+    const serverName = await getServerName(env);
+
     // 获取媒体库统计
     let stats = null;
     try {
@@ -15,14 +18,15 @@ export async function handleRegisterGet(env: Env): Promise<Response> {
       // 不影响注册页面渲染
     }
 
-    const html = renderRegisterPage(env, stats);
+    const html = renderRegisterPage(env, serverName, stats);
     return new Response(html, {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
     });
   } catch (err: any) {
     console.error('Error rendering register page:', err);
-    const html = renderRegisterPage(env, null, '服务器暂时不可用，请稍后再试');
+    const serverName = await getServerName(env);
+    const html = renderRegisterPage(env, serverName, null, '服务器暂时不可用，请稍后再试');
     return new Response(html, {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -140,7 +144,8 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
 export async function handleSuccessWithRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const username = url.searchParams.get('username') || '新用户';
-  const html = renderSuccessPage(env, username);
+  const serverName = await getServerName(env);
+  const html = renderSuccessPage(env, serverName, username);
   return new Response(html, {
     status: 200,
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -150,11 +155,12 @@ export async function handleSuccessWithRequest(request: Request, env: Env): Prom
 // ====== 辅助函数 ======
 
 async function renderRegisterError(env: Env, error: string): Promise<Response> {
+  const serverName = await getServerName(env);
   let stats = null;
   try {
     stats = await getLibraryStats(env.EMBY_SERVER_URL, env.EMBY_API_KEY);
   } catch {}
-  const html = renderRegisterPage(env, stats, error);
+  const html = renderRegisterPage(env, serverName, stats, error);
   return new Response(html, {
     status: 200,
     headers: { 'Content-Type': 'text/html; charset=utf-8' },

@@ -5,12 +5,12 @@ import { Env, EmbyUser, InviteCode } from '../types';
  */
 export function renderAdminDashboard(
   env: Env,
+  serverName: string,
   currentUser: string,
   embyUsers: EmbyUser[],
   inviteCodes: InviteCode[],
   templateUserId: string = ''
 ): string {
-  const serverName = env.EMBY_SERVER_NAME || 'Emby Server';
   const adminUsers = embyUsers.filter(u => u.IsAdministrator);
   const regularUsers = embyUsers.filter(u => !u.IsAdministrator);
   // 查找模板用户名称

@@ -1,4 +1,4 @@
-import { EmbyUser, EmbyLibraryStats } from '../types';
+import { Env, EmbyUser, EmbyLibraryStats } from '../types';
 
 const API_KEY_HEADER = 'X-Emby-Token';
 
@@ -261,6 +261,47 @@ export async function getLibraryStats(
  */
 export async function getServerInfo(serverUrl: string, apiKey: string): Promise<any> {
   return embyApiCall(serverUrl, apiKey, '/System/Info');
+}
+
+/**
+ * 获取 Emby 服务器名称
+ * 优先从 KV 缓存读取，未命中则调用 Emby API 获取，存入 KV 缓存（TTL 1 小时）
+ * 兜底链路：KV 缓存 → Emby API → env.EMBY_SERVER_NAME → "Emby Server"
+ */
+export async function getServerName(env: Env): Promise<string> {
+  // 1. 尝试从 KV 缓存读取
+  try {
+    const cached = await env.INVITE_CODES.get('config:server_name_cached');
+    if (cached) return cached;
+  } catch {
+    // KV 不可用时继续走后续链路
+  }
+
+  // 2. 尝试从 Emby API 实时获取
+  if (env.EMBY_SERVER_URL && env.EMBY_API_KEY) {
+    try {
+      const info = await getServerInfo(env.EMBY_SERVER_URL, env.EMBY_API_KEY);
+      if (info && info.ServerName) {
+        // 写入 KV 缓存（TTL 3600 秒）
+        try {
+          await env.INVITE_CODES.put('config:server_name_cached', info.ServerName, {
+            expirationTtl: 3600,
+          });
+        } catch {}
+        return info.ServerName;
+      }
+    } catch {
+      // API 不可用时继续走后续链路
+    }
+  }
+
+  // 3. 兜底：环境变量
+  if (env.EMBY_SERVER_NAME) {
+    return env.EMBY_SERVER_NAME;
+  }
+
+  // 4. 最终兜底
+  return 'Emby Server';
 }
 
 

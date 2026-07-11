@@ -3,8 +3,7 @@ import { Env } from '../types';
 /**
  * 管理员登录页
  */
-export function renderAdminLoginPage(env: Env, error: string | null): string {
-  const serverName = env.EMBY_SERVER_NAME || 'Emby Server';
+export function renderAdminLoginPage(env: Env, serverName: string, error: string | null): string {
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
