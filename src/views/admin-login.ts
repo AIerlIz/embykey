@@ -25,6 +25,7 @@ export function renderAdminLoginPage(env: Env, serverName: string, error: string
     padding: 20px;
     color: #e0e0e0;
   }
+  .container { max-width: 420px; width: 100%; margin: 0 auto; }
   .card {
     background: rgba(255,255,255,0.08);
     backdrop-filter: blur(20px);
@@ -98,11 +99,12 @@ export function renderAdminLoginPage(env: Env, serverName: string, error: string
 </style>
 </head>
 <body>
-<div class="card">
-  <h1>🔐 管理员登录</h1>
-  <p class="subtitle">使用 Emby 管理员账号登录</p>
+<div class="container">
+    <h1>🔐 ${escapeHtml(serverName)}</h1>
+    <p class="subtitle">使用 Emby 管理员账号登录</p>
 
-  ${error ? `<div class="error-msg">${escapeHtml(error)}</div>` : ''}
+  <div class="card">
+    ${error ? `<div class="error-msg">${escapeHtml(error)}</div>` : ''}
 
   <form action="/admin" method="POST">
     <div class="form-group">
@@ -119,6 +121,7 @@ export function renderAdminLoginPage(env: Env, serverName: string, error: string
   <div class="back-link">
     <a href="/">← 返回注册页</a>
   </div>
+</div>
 </div>
 </body>
 </html>`;
