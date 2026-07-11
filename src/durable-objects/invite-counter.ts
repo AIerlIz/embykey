@@ -4,6 +4,7 @@ import { Env } from '../types';
 /**
  * Durable Object — 邀请码原子计数器
  * 每个邀请码对应一个 DO 实例，确保 useCount 递增是原子操作
+ * 通过 fetch 请求通信（兼容所有 Workers 运行时版本）
  */
 export class InviteCounter extends DurableObject {
   private useCount: number = 0;
@@ -21,29 +22,36 @@ export class InviteCounter extends DurableObject {
     });
   }
 
-  /**
-   * 尝试使用一次邀请码
-   * @returns { success: boolean; useCount: number; message?: string }
-   */
-  async tryUse(code: string, maxUses: number): Promise<{ success: boolean; useCount: number; message?: string }> {
-    if (this.maxUses === -1) {
-      // 首次初始化
-      this.maxUses = maxUses;
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    if (path === '/try-use') {
+      const body: any = await request.json();
+      const code = body.code;
+      const maxUses = body.maxUses;
+
+      if (this.maxUses === -1) {
+        this.maxUses = maxUses;
+      }
+
+      if (this.maxUses !== -1 && this.useCount >= this.maxUses) {
+        return Response.json({
+          success: false,
+          useCount: this.useCount,
+          message: '邀请码已失效（使用次数已用完）',
+        });
+      }
+
+      this.useCount++;
+      await this.ctx.storage.put('state', { useCount: this.useCount, maxUses: this.maxUses });
+      return Response.json({ success: true, useCount: this.useCount });
     }
 
-    if (this.maxUses !== -1 && this.useCount >= this.maxUses) {
-      return { success: false, useCount: this.useCount, message: '\u9080\u8bf7\u7801\u5df2\u5931\u6548\uff08\u4f7f\u7528\u6b21\u6570\u5df2\u7528\u5b8c\uff09' };
+    if (path === '/get-count') {
+      return Response.json({ useCount: this.useCount, maxUses: this.maxUses });
     }
 
-    this.useCount++;
-    await this.ctx.storage.put('state', { useCount: this.useCount, maxUses: this.maxUses });
-    return { success: true, useCount: this.useCount };
-  }
-
-  /**
-   * 获取当前使用次数
-   */
-  async getCount(): Promise<{ useCount: number; maxUses: number }> {
-    return { useCount: this.useCount, maxUses: this.maxUses };
+    return new Response('Not found', { status: 404 });
   }
 }

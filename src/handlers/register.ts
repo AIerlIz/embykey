@@ -108,7 +108,12 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
         console.log(`[Register] DO 可用，尝试通过 DO 申请邀请码: ${inviteCode}`);
         const counterId = env.INVITE_COUNTER.idFromName(inviteCode);
         const counterStub: any = env.INVITE_COUNTER.get(counterId);
-        const useResult: any = await counterStub.tryUse(inviteCode, invite.maxUses);
+        const doReq = new Request('http://do/try-use', {
+          method: 'POST',
+          body: JSON.stringify({ code: inviteCode, maxUses: invite.maxUses }),
+        });
+        const doResp = await counterStub.fetch(doReq);
+        const useResult: any = await doResp.json();
         console.log(`[Register] DO 返回结果: success=${useResult.success}, count=${useResult.useCount}`);
         if (!useResult.success) {
           return renderRegisterError(env, useResult.message || '邀请码已失效');

@@ -387,7 +387,8 @@ async function listInviteCodes(env: Env): Promise<InviteCode[]> {
               console.log(`[Dashboard] 查询 DO 邀请码 ${code} 的使用次数`);
               const counterId = env.INVITE_COUNTER.idFromName(code);
               const counterStub: any = env.INVITE_COUNTER.get(counterId);
-              const countResult: any = await counterStub.getCount();
+              const doResp = await counterStub.fetch(new Request('http://do/get-count'));
+              const countResult: any = await doResp.json();
               console.log(`[Dashboard] DO 返回: ${code} -> useCount=${countResult.useCount}`);
               parsed.useCount = countResult.useCount || 0;
             } catch (doErr) {
