@@ -2,6 +2,7 @@ import { Env } from '../types';
 import { getLibraryStats, createUser, getServerName } from '../services/emby';
 import { renderRegisterPage } from '../views/register';
 import { renderSuccessPage } from '../views/success';
+import { checkRateLimit, getClientIp } from '../utils/rate-limit';
 
 // GET / - 注册页面（含媒体库统计）
 export async function handleRegisterGet(env: Env): Promise<Response> {
@@ -37,6 +38,13 @@ export async function handleRegisterGet(env: Env): Promise<Response> {
 // POST /register - 提交注册
 export async function handleRegisterPost(request: Request, env: Env): Promise<Response> {
   try {
+    // 速率限制：每 IP 每 60 秒最多 10 次注册
+    const ip = getClientIp(request);
+    const { allowed } = await checkRateLimit(env, `register:${ip}`, 10);
+    if (!allowed) {
+      return renderRegisterError(env, '请求过于频繁，请稍后再试');
+    }
+
     // CSRF 防护：验证请求来源
     const origin = request.headers.get('Origin') || request.headers.get('Referer') || '';
     const url = new URL(request.url);

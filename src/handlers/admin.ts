@@ -2,6 +2,7 @@ import { Env, InviteCode, EmbyUser } from '../types';
 import { createUser, getUsers, validateAdmin, deleteUser, toggleUserDisabled, getServerName } from '../services/emby';
 import { renderAdminLoginPage } from '../views/admin-login';
 import { renderAdminDashboard } from '../views/admin-dashboard';
+import { checkRateLimit, getClientIp } from '../utils/rate-limit';
 
 
 // === 辅助函数 ===
@@ -95,6 +96,18 @@ export async function handleAdminLoginGet(env: Env): Promise<Response> {
 
 // POST /admin
 export async function handleAdminLoginPost(request: Request, env: Env): Promise<Response> {
+  // 速率限制：每 IP 每 60 秒最多 5 次登录尝试
+  const ip = getClientIp(request);
+  const { allowed } = await checkRateLimit(env, `admin-login:${ip}`, 5);
+  if (!allowed) {
+    const serverName = await getServerName(env);
+    const html = renderAdminLoginPage(env, serverName, '请求过于频繁，请稍后再试');
+    return new Response(html, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
+  }
+
   const formData = await request.formData();
   const username = (formData.get('username') as string || '').trim();
   const password = formData.get('password') as string || '';
@@ -219,7 +232,7 @@ export async function handleInviteCodesPost(request: Request, env: Env): Promise
     const invite: InviteCode = {
       code,
       createdAt: new Date().toISOString(),
-      createdBy: username,
+      createdBy: session.username,
       maxUses,
       useCount: 0,
     };
