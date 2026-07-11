@@ -1,121 +1,49 @@
+import { Hono } from 'hono';
 import { Env } from './types';
 import { handleRegisterGet, handleRegisterPost, handleSuccessWithRequest } from './handlers/register';
-import { handleForgotPasswordGet, handleForgotPasswordPost } from './handlers/forgot-password';
 import { handleAdminLoginGet, handleAdminLoginPost, handleAdminLogout, handleAdminDashboard, handleInviteCodesPost, handleInviteCodesDelete, handleTemplateUserPost, handleUserToggleDisable, handleUserDelete } from './handlers/admin';
+import { handleForgotPasswordGet, handleForgotPasswordPost } from './handlers/forgot-password';
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-    const path = url.pathname;
-    const method = request.method;
+// Hono app with typed Bindings
+const app = new Hono<{ Bindings: Env }>();
 
-    // OPTIONS preflight — 本系统不对外提供公开 API
-    if (method === 'OPTIONS') {
-      return new Response(null, { status: 204 });
-    }
+// ---- 静态资源 ----
+app.get('/favicon.svg', (c) => {
+  return c.body(faviconSvg, 200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=86400' });
+});
 
-    try {
-      // 路由分发
-      switch (path) {
-        // ---- 静态资源 ----
-        case '/favicon.svg':
-          return new Response(faviconSvg, {
-            status: 200,
-            headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=86400' },
-          });
+// ---- 注册 ----
+app.get('/', (c) => handleRegisterGet(c.env));
+app.post('/register', (c) => handleRegisterPost(c.req.raw, c.env));
+app.get('/success', (c) => handleSuccessWithRequest(c.req.raw, c.env));
 
-        // ---- 注册 ----
-        case '/':
-          if (method === 'GET') {
-            return await handleRegisterGet(env);
-          }
-          break;
+// ---- 忘记密码 ----
+app.get('/forgot-password', (c) => handleForgotPasswordGet(c.env));
+app.post('/forgot-password', (c) => handleForgotPasswordPost(c.req.raw, c.env));
 
-        case '/register':
-          if (method === 'POST') {
-            return await handleRegisterPost(request, env);
-          }
-          break;
+// ---- 管理后台 ----
+app.get('/admin', (c) => handleAdminLoginGet(c.env));
+app.post('/admin', (c) => handleAdminLoginPost(c.req.raw, c.env));
+app.get('/admin/logout', (c) => handleAdminLogout(c.req.raw, c.env));
+app.get('/admin/dashboard', (c) => handleAdminDashboard(c.req.raw, c.env));
+app.post('/admin/invite-codes', (c) => handleInviteCodesPost(c.req.raw, c.env));
+app.delete('/admin/invite-codes/:code', (c) => handleInviteCodesDelete(c.req.raw, c.env, c.req.param('code')));
+app.post('/admin/template-user', (c) => handleTemplateUserPost(c.req.raw, c.env));
 
-        case '/success':
-          if (method === 'GET') {
-            return await handleSuccessWithRequest(request, env);
-          }
-          break;
+// ---- 管理后台：用户操作 ----
+app.post('/admin/users/:id/toggle-disable', (c) => handleUserToggleDisable(c.req.raw, c.env, c.req.param('id')));
+app.post('/admin/users/:id/delete', (c) => handleUserDelete(c.req.raw, c.env, c.req.param('id')));
 
-        // ---- 忘记密码 ----
-        case '/forgot-password':
-          if (method === 'GET') {
-            return await handleForgotPasswordGet(env);
-          }
-          if (method === 'POST') {
-            return await handleForgotPasswordPost(request, env);
-          }
-          break;
+// ---- 404 ----
+app.notFound((c) => c.text('Not Found', 404));
 
-        // ---- 管理后台 ----
-        case '/admin':
-          if (method === 'GET') {
-            return await handleAdminLoginGet(env);
-          }
-          if (method === 'POST') {
-            return await handleAdminLoginPost(request, env);
-          }
-          break;
+// ---- 全局错误处理 ----
+app.onError((err, c) => {
+  console.error('Unhandled error:', err);
+  return c.text('Internal Server Error', 500);
+});
 
-        case '/admin/logout':
-          if (method === 'GET') {
-            return await handleAdminLogout(request, env);
-          }
-          break;
-
-        case '/admin/dashboard':
-          if (method === 'GET') {
-            return await handleAdminDashboard(request, env);
-          }
-          break;
-
-        case '/admin/invite-codes':
-          if (method === 'POST') {
-            return await handleInviteCodesPost(request, env);
-          }
-          break;
-
-        case '/admin/template-user':
-          if (method === 'POST') {
-            return await handleTemplateUserPost(request, env);
-          }
-          break;
-
-        default:
-          // 处理 DELETE /admin/invite-codes/:code
-          const inviteCodeMatch = path.match(/^\/admin\/invite-codes\/(.+)$/);
-          if (inviteCodeMatch && method === 'DELETE') {
-            return await handleInviteCodesDelete(request, env, inviteCodeMatch[1]);
-          }
-          // 处理 POST /admin/users/:id/toggle-disable
-          const toggleDisableMatch = path.match(/^\/admin\/users\/(.+)\/toggle-disable$/);
-          if (toggleDisableMatch && method === 'POST') {
-            return await handleUserToggleDisable(request, env, toggleDisableMatch[1]);
-          }
-          // 处理 POST /admin/users/:id/delete
-          const userDeleteMatch = path.match(/^\/admin\/users\/(.+)\/delete$/);
-          if (userDeleteMatch && method === 'POST') {
-            return await handleUserDelete(request, env, userDeleteMatch[1]);
-          }
-          break;
-      }
-
-      // 404
-      return new Response('Not Found', { status: 404 });
-
-    } catch (err: any) {
-      console.error('Unhandled error:', err);
-      const message = err instanceof Error ? err.message : String(err);
-      return new Response('Internal Server Error', { status: 500 });
-    }
-  },
-};
+export default app;
 
 const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
