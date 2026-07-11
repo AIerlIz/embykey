@@ -259,7 +259,7 @@ export async function getServerInfo(serverUrl: string, apiKey: string): Promise<
  */
 export async function deleteUser(
   serverUrl: string,
-  apiKey: [redacted],
+  apiKey: string,
   userId: string
 ): Promise<void> {
   await embyApiCall(serverUrl, apiKey, `/Users/${userId}`, {
@@ -272,7 +272,7 @@ export async function deleteUser(
  */
 export async function toggleUserDisabled(
   serverUrl: string,
-  apiKey: [redacted],
+  apiKey: string,
   userId: string,
   disabled: boolean
 ): Promise<void> {
