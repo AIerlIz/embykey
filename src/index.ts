@@ -8,16 +8,9 @@ export default {
     const path = url.pathname;
     const method = request.method;
 
-    // CORS headers for API endpoints
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    };
-
-    // Handle OPTIONS (CORS preflight)
+    // OPTIONS preflight — 本系统不对外提供公开 API
     if (method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
+      return new Response(null, { status: 204 });
     }
 
     try {
@@ -107,7 +100,8 @@ export default {
 
     } catch (err: any) {
       console.error('Unhandled error:', err);
-      return new Response(`Internal Server Error: ${err.message}`, { status: 500 });
+      const message = err instanceof Error ? err.message : String(err);
+      return new Response('Internal Server Error', { status: 500 });
     }
   },
 };
