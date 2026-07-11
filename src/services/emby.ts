@@ -195,10 +195,20 @@ export async function updateUserPolicy(
   userId: string,
   policy: any
 ): Promise<void> {
-  await embyApiCall(serverUrl, apiKey, `/Users/${userId}/Policy`, {
-    method: 'POST',
+  const url = new URL(serverUrl.replace(/\/+$/, '') + '/emby/Users/' + userId + '/Policy');
+  const response = await fetch(url.toString(), {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Emby-Token': apiKey,
+      'X-Emby-Authorization': 'Emby Client="EmbyRegister", Device="Worker", DeviceId="worker", Version="1.0.0"',
+    },
     body: JSON.stringify(policy),
   });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error('Policy update failed (' + response.status + '): ' + text);
+  }
 }
 
 /**
