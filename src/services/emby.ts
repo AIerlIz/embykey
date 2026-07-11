@@ -1,7 +1,5 @@
 import { Env, EmbyUser, EmbyLibraryStats } from '../types';
 
-const API_KEY_HEADER = 'X-Emby-Token';
-
 /**
  * 调用 Emby API 的通用函数
  */
@@ -16,7 +14,8 @@ async function embyApiCall<T>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      [API_KEY_HEADER]: apiKey,
+      'X-Emby-Token': apiKey,
+      'X-Emby-Authorization': 'Emby Client="EmbyRegister", Device="Worker", DeviceId="worker", Version="1.0.0"',
       ...(options.headers as Record<string, string>),
     },
   });
@@ -157,8 +156,12 @@ export async function createUser(
       if (policy) {
         await updateUserPolicy(serverUrl, apiKey, newUser.Id, policy);
       }
-    } catch (e) {
-      console.error('Failed to copy user policy from template:', e);
+    } catch (e: any) {
+      if (String(e.message || '').includes('(404)')) {
+        console.warn('[Template] 模板用户 Policy 端点不可用，已跳过:', e.message);
+      } else {
+        console.error('[Template] 复制模板用户策略失败:', e.message);
+      }
     }
 
     try {
@@ -166,8 +169,12 @@ export async function createUser(
       if (config) {
         await updateUserConfiguration(serverUrl, apiKey, newUser.Id, config);
       }
-    } catch (e) {
-      console.error('Failed to copy user configuration from template:', e);
+    } catch (e: any) {
+      if (String(e.message || '').includes('(404)')) {
+        console.warn('[Template] 模板用户 Configuration 端点不可用，已跳过:', e.message);
+      } else {
+        console.error('[Template] 复制模板用户配置失败:', e.message);
+      }
     }
   }
 
