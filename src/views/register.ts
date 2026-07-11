@@ -229,12 +229,11 @@ export function renderRegisterPage(
 function renderStats(stats: EmbyLibraryStats): string {
   const items: { label: string; count: number; emoji: string }[] = [];
 
-  if (stats.MovieCount > 0) items.push({ label: '电影', count: stats.MovieCount, emoji: '🎬' });
-  if (stats.SeriesCount > 0) items.push({ label: '剧集', count: stats.SeriesCount, emoji: '📺' });
-  if (stats.EpisodeCount > 0) items.push({ label: '集数', count: stats.EpisodeCount, emoji: '📼' });
-  if (stats.SongCount > 0) items.push({ label: '音乐', count: stats.SongCount, emoji: '🎵' });
-  if (stats.AlbumCount > 0) items.push({ label: '专辑', count: stats.AlbumCount, emoji: '💿' });
-  if (stats.ArtistCount > 0) items.push({ label: '艺术家', count: stats.ArtistCount, emoji: '🎤' });
+  if ((stats.MovieCount ?? 0) > 0) items.push({ label: '电影', count: stats.MovieCount ?? 0, emoji: '🎬' });
+  if ((stats.SeriesCount ?? 0) > 0) items.push({ label: '剧集', count: stats.SeriesCount ?? 0, emoji: '📺' });
+  if ((stats.EpisodeCount ?? 0) > 0) items.push({ label: '集数', count: stats.EpisodeCount ?? 0, emoji: '📼' });
+  if ((stats.SongCount ?? 0) > 0) items.push({ label: '音乐', count: stats.SongCount ?? 0, emoji: '🎵' });
+  if ((stats.ArtistCount ?? 0) > 0) items.push({ label: '艺术家', count: stats.ArtistCount ?? 0, emoji: '🎤' });
 
   if (items.length === 0) return '';
 
@@ -243,6 +242,7 @@ function renderStats(stats: EmbyLibraryStats): string {
   </div>`;
 }
 
-function escapeHtml(str: string): string {
+function escapeHtml(str: string | undefined | null): string {
+  if (str == null) return "";
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

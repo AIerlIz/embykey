@@ -258,6 +258,7 @@ export function renderSuccessPage(env: Env, serverName: string, username: string
 </html>`;
 }
 
-function escapeHtml(str: string): string {
+function escapeHtml(str: string | undefined | null): string {
+  if (str == null) return "";
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

@@ -110,10 +110,9 @@ function normalizeUser(user: any): EmbyUser {
     Id: user.Id,
     Name: user.Name,
     ServerId: user.ServerId,
-    UserType: user.UserType,
     // IsAdministrator 优先取顶层，其次取 Policy
     IsAdministrator: user.IsAdministrator !== undefined ? user.IsAdministrator : user.Policy?.IsAdministrator === true,
-    HasPassword: user.HasPassword,
+    HasPassword: !!user.HasPassword,
     Policy: {
       IsAdministrator: user.Policy?.IsAdministrator ?? (user.IsAdministrator === true),
       IsHidden: user.Policy?.IsHidden,

@@ -112,7 +112,7 @@ export async function handleAdminLoginPost(request: Request, env: Env): Promise<
   }
 
   // 创建 session（等待存储到 KV）
-  const token = await createSession(env, admin.Name);
+  const token = await createSession(env, admin.Name || '');
 
   // 重定向到仪表盘，并设置 cookie
   const url = new URL(request.url);
