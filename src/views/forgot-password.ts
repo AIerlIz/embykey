@@ -10,7 +10,7 @@ export function renderForgotPasswordPage(env: Env, serverName: string, error?: s
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<title>忘记密码 - ${serverName}</title>
+<title>${escapeHtml(serverName)} - 忘记密码</title>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }

@@ -19,7 +19,7 @@ export function renderRegisterPage(
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<title>注册 - ${serverName}</title>
+<title>${escapeHtml(serverName)} - 注册</title>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }

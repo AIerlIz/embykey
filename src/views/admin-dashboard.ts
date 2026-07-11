@@ -54,7 +54,7 @@ export function renderAdminDashboard(
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="csrf-token" content="${csrfToken}">
-<title>管理后台 - ${serverName}</title>
+<title>${escapeHtml(serverName)} - 管理后台</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }

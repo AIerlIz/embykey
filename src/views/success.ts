@@ -14,7 +14,7 @@ export function renderSuccessPage(env: Env, serverName: string, username: string
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<title>注册成功 - ${serverName}</title>
+<title>${escapeHtml(serverName)} - 注册成功</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
