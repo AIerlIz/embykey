@@ -334,7 +334,7 @@ export async function handleUserToggleDisable(request: Request, env: Env, userId
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (err: any) {
     console.error('[UserAction] 切换用户禁用状态失败:', err.message);
-    return new Response(JSON.stringify({ error: '操作失败', detail: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: '操作失败' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 
