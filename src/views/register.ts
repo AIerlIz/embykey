@@ -155,13 +155,12 @@ export function renderRegisterPage(
 </head>
 <body>
 <div class="container">
+    <h1>🎬 ${escapeHtml(serverName)}</h1>
+    <p class="subtitle">创建你的账号，开启影音之旅</p>
   <!-- 媒体库统计 -->
   ${stats ? renderStats(stats) : ''}
 
   <div class="card">
-    <h1>🎬 ${escapeHtml(serverName)}</h1>
-    <p class="subtitle">创建你的账号，开启影音之旅</p>
-
     ${error ? `<div class="error-msg">${escapeHtml(error)}</div>` : ''}
 
     <form action="/register" method="POST" id="registerForm">
