@@ -263,6 +263,13 @@ export function renderAdminDashboard(
     color: #888;
     margin-top: 4px;
   }
+  .avatar-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    vertical-align: middle;
+  }
   .empty-msg {
     text-align: center;
     padding: 32px;
@@ -509,19 +516,23 @@ export function renderAdminDashboard(
       : `<table>
           <thead>
             <tr>
+              <th>头像</th>
               <th>用户名</th>
               <th>角色</th>
               <th>状态</th>
               <th>密码</th>
+              <th>最后活跃</th>
               <th>操作</th>
             </tr>
           </thead>
           <tbody>
             ${embyUsers.map(u => `<tr>
+              <td>${u.PrimaryImageTag ? `<img class="avatar-sm" src="${escapeHtml(env.EMBY_SERVER_URL)}/emby/Users/${escapeHtml(u.Id)}/Images/Primary?tag=${u.PrimaryImageTag}" alt="">` : ''}</td>
               <td>${escapeHtml(u.Name)}</td>
               <td><span class="role-badge ${getRoleClass(u)}">${getRoleLabel(u)}</span></td>
               <td title="${u.Policy?.IsDisabled ? '已禁用' : u.Policy?.IsHidden ? '隐藏' : '正常'}">${u.Policy?.IsDisabled ? '❌' : u.Policy?.IsHidden ? '🔒' : '✅'}</td>
               <td title="${u.HasPassword ? '已设置' : '未设置'}">${u.HasPassword ? '✅' : '❌'}</td>
+              <td style="font-size:12px;color:#888;white-space:nowrap;">${u.LastActivityDate ? new Date(u.LastActivityDate).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
               <td>
                 ${u.IsAdministrator ? '' : `<button class="btn btn-sm ${u.Policy?.IsDisabled ? 'btn-success' : 'btn-warning'}" onclick="toggleUser('${escapeHtml(u.Id)}', ${!u.Policy?.IsDisabled})">${u.Policy?.IsDisabled ? '启用' : '禁用'}</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteUser('${escapeHtml(u.Id)}', '${escapeHtml(u.Name)}')">删除</button>`}
