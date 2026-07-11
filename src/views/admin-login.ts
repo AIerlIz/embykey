@@ -1,4 +1,5 @@
 import { Env } from '../types';
+import { escapeHtml } from './helpers';
 
 /**
  * 管理员登录页
@@ -123,7 +124,4 @@ export function renderAdminLoginPage(env: Env, serverName: string, error: string
 </html>`;
 }
 
-function escapeHtml(str: string | undefined | null): string {
-  if (str == null) return "";
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+

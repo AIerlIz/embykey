@@ -3,10 +3,6 @@ main = "src/index.ts"
 compatibility_date = "2024-03-20"
 keep_vars = true
 
-# 模块别名 — 使 SDK 的 Node.js 依赖在 Workers 中可用
-[alias]
-url = "./src/sdk/url-shim.ts"
-isomorphic-fetch = "./src/sdk/fetch-shim.ts"
 
 # KV 命名空间绑定
 [[kv_namespaces]]

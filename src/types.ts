@@ -1,10 +1,29 @@
-import type { UserDto, ItemCounts } from './sdk/api';
-
-export interface EmbyUser extends UserDto {
+export interface EmbyUser {
+  Id: string;
+  Name: string;
+  ServerId?: string;
+  HasPassword?: boolean;
   IsAdministrator: boolean;
+  Policy?: {
+    IsAdministrator?: boolean;
+    IsHidden?: boolean;
+    IsDisabled?: boolean;
+    EnableUserPreferenceAccess?: boolean;
+  };
+  PrimaryImageTag?: string;
+  LastLoginDate?: string;
+  LastActivityDate?: string;
+  Configuration?: any;
 }
 
-export type EmbyLibraryStats = ItemCounts;
+export interface EmbyLibraryStats {
+  MovieCount?: number;
+  SeriesCount?: number;
+  EpisodeCount?: number;
+  SongCount?: number;
+  ArtistCount?: number;
+  GameCount?: number;
+}
 
 // ====== 邀请码类型 ======
 

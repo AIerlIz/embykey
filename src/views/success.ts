@@ -1,4 +1,5 @@
 import { Env } from '../types';
+import { escapeHtml } from './helpers';
 
 /**
  * 注册成功页
@@ -258,7 +259,4 @@ export function renderSuccessPage(env: Env, serverName: string, username: string
 </html>`;
 }
 
-function escapeHtml(str: string | undefined | null): string {
-  if (str == null) return "";
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+

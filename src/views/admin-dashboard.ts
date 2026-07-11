@@ -1,4 +1,5 @@
 import { Env, EmbyUser, InviteCode } from '../types';
+import { escapeHtml } from './helpers';
 
 /**
  * 管理后台仪表盘
@@ -458,7 +459,7 @@ export function renderAdminDashboard(
                 <td class="${statusClass}">${statusText}</td>
                 <td>
                   <div class="btn-group">
-                    <button class="btn btn-secondary btn-sm" onclick="shareCode('${escapeHtml(c.code)}')">分享</button>
+                    <button class="btn btn-secondary btn-sm" data-code="${c.code}" onclick="shareCode(this.dataset.code)">分享</button>
                     <button class="btn btn-danger btn-sm" data-code="${c.code}" onclick="deleteCode(this.dataset.code)">删除</button>
                   </div>
                 </td>
@@ -675,7 +676,4 @@ function formatDate(iso: string): string {
   }
 }
 
-function escapeHtml(str: string | undefined | null): string {
-  if (str == null) return "";
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
+

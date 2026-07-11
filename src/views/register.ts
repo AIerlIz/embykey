@@ -1,4 +1,5 @@
 import { Env, EmbyLibraryStats } from '../types';
+import { escapeHtml } from './helpers';
 
 /**
  * 注册表单页
@@ -242,7 +243,4 @@ function renderStats(stats: EmbyLibraryStats): string {
   </div>`;
 }
 
-function escapeHtml(str: string | undefined | null): string {
-  if (str == null) return "";
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+
