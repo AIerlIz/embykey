@@ -190,7 +190,7 @@ export async function createUser(
  */
 export async function getUserWithPolicy(
   serverUrl: string,
-  apiKey: [redacted],
+  apiKey: string,
   userId: string
 ): Promise<any> {
   return embyApiCall<any>(serverUrl, apiKey, `/Users/${userId}?Fields=Policy,Configuration`);
