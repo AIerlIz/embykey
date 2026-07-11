@@ -99,7 +99,7 @@ export async function handleRegisterPost(request: Request, env: Env): Promise<Re
 
     // 通过 Durable Object 原子增量邀请码使用次数
     const counterId = env.INVITE_COUNTER.idFromName(inviteCode);
-    const counterStub = env.INVITE_COUNTER.get(counterId);
+    const counterStub: any = env.INVITE_COUNTER.get(counterId);
     const useResult: any = await counterStub.tryUse(inviteCode, invite.maxUses);
 
     if (!useResult.success) {
