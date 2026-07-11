@@ -1,30 +1,10 @@
-// ====== Emby API 类型 ======
+import type { UserDto, ItemCounts } from './sdk/api';
 
-export interface EmbyUser {
-  Id: string;
-  Name: string;
-  ServerId: string;
-  UserType?: string; // "User", "Administrator", "Guest"
+export interface EmbyUser extends UserDto {
   IsAdministrator: boolean;
-  HasPassword: boolean;
-  Policy?: {
-    IsAdministrator: boolean;
-    IsHidden?: boolean;
-    IsDisabled?: boolean;
-    EnableUserPreferenceAccess?: boolean;
-  };
 }
 
-export interface EmbyLibraryStats {
-  MovieCount: number;
-  SeriesCount: number;
-  EpisodeCount: number;
-  SongCount: number;
-  AlbumCount: number;
-  ArtistCount: number;
-  GameCount: number;
-  BookCount: number;
-}
+export type EmbyLibraryStats = ItemCounts;
 
 // ====== 邀请码类型 ======
 
