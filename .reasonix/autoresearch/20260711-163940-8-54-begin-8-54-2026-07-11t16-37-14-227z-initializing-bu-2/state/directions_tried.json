@@ -1,0 +1,23 @@
+[
+  {
+    "fingerprint": "wrangler-toml-new-classes-new-sqlite-classes-90b35e1-3c5f67c1",
+    "summary": "修复已确认应用 — `wrangler.toml` 中 `new_classes` 已改为 `new_sqlite_classes`，提交 `90b35e1`。",
+    "first_seen_iteration": 1,
+    "last_seen_iteration": 1,
+    "count": 1
+  },
+  {
+    "fingerprint": "wrangler-toml-new-classes-new-sqlite-classes-90b35e1-c498d7bd",
+    "summary": "修复已完成且已验证。`wrangler.toml` 中 `new_classes` → `new_sqlite_classes`，提交 `90b35e1`。",
+    "first_seen_iteration": 2,
+    "last_seen_iteration": 2,
+    "count": 1
+  },
+  {
+    "fingerprint": "turn-completed",
+    "summary": "turn completed",
+    "first_seen_iteration": 3,
+    "last_seen_iteration": 3,
+    "count": 1
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "status": "running",
+  "iteration": 1,
+  "current_direction": "已修复。构建（`tsc`）通过了，部署失败的唯一原因是 `InviteCounter` 未从入口文件导出。已添加 `export { InviteCounter }`，下次",
+  "stale_count": 1,
+  "pivot_count": 0,
+  "blocked_reason": "",
+  "updated_at": "2026-07-11T16:36:55.973653Z"
+}
