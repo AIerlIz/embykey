@@ -384,6 +384,7 @@ export function renderAdminDashboard(
   <h1>⚙️ ${escapeHtml(serverName)} 管理后台</h1>
   <div class="user-info">
     👤 ${escapeHtml(currentUser)}
+    <a href="/admin/logout" style="color:#ef9a9a;">退出</a>
     <a href="/">← 返回首页</a>
   </div>
 </div>

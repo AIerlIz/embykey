@@ -126,6 +126,27 @@ export async function handleAdminLoginPost(request: Request, env: Env): Promise<
   });
 }
 
+// GET /admin/logout - 退出登录
+export async function handleAdminLogout(request: Request, env: Env): Promise<Response> {
+  const cookie = request.headers.get('Cookie') || '';
+  const match = cookie.match(/admin_token=([^;]+)/);
+  if (match) {
+    try {
+      await env.INVITE_CODES.delete(`session:${match[1]}`);
+    } catch {}
+  }
+
+  const url = new URL(request.url);
+  const absoluteUrl = url.protocol + '//' + url.host + '/admin';
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: absoluteUrl,
+      'Set-Cookie': 'admin_token=; Path=/; HttpOnly; Max-Age=0',
+    },
+  });
+}
+
 // === 管理后台仪表盘 ===
 
 // GET /admin/dashboard

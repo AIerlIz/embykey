@@ -1,6 +1,6 @@
 import { Env } from './types';
 import { handleRegisterGet, handleRegisterPost, handleSuccessWithRequest } from './handlers/register';
-import { handleAdminLoginGet, handleAdminLoginPost, handleAdminDashboard, handleInviteCodesPost, handleInviteCodesDelete, handleTemplateUserPost, handleUserToggleDisable, handleUserDelete } from './handlers/admin';
+import { handleAdminLoginGet, handleAdminLoginPost, handleAdminLogout, handleAdminDashboard, handleInviteCodesPost, handleInviteCodesDelete, handleTemplateUserPost, handleUserToggleDisable, handleUserDelete } from './handlers/admin';
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -56,6 +56,12 @@ export default {
           }
           if (method === 'POST') {
             return await handleAdminLoginPost(request, env);
+          }
+          break;
+
+        case '/admin/logout':
+          if (method === 'GET') {
+            return await handleAdminLogout(request, env);
           }
           break;
 
