@@ -615,7 +615,7 @@ async function toggleUser(userId, disabled) {
       showToast('✅ 操作成功');
       setTimeout(() => location.reload(), 500);
     } else {
-      showToast('❌ 操作失败');
+      showToast('❌ ' + (data.detail || '操作失败'));
     }
   } catch (e) {
     showToast('❌ 操作失败');

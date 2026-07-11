@@ -267,8 +267,8 @@ export async function handleUserToggleDisable(request: Request, env: Env, userId
     await toggleUserDisabled(env.EMBY_SERVER_URL, env.EMBY_API_KEY, userId, disabled);
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (err: any) {
-    console.error('Toggle user disable error:', err);
-    return new Response(JSON.stringify({ error: '操作失败' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    console.error('[UserAction] 切换用户禁用状态失败:', err.message);
+    return new Response(JSON.stringify({ error: '操作失败', detail: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 
