@@ -233,6 +233,10 @@ export function renderAdminDashboard(
     font-size: 14px;
     outline: none;
   }
+  .form-inline select option {
+    background: #1a1a2e;
+    color: #e0e0e0;
+  }
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
