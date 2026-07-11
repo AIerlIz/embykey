@@ -31,3 +31,7 @@ new_sqlite_classes = ["InviteCounter"]
 
 [vars]
 # 可选：Emby 服务器名称（展示用），不设置时将自动从 Emby API 获取
+
+[observability.logs]
+enabled = true
+invocation_logs = true
